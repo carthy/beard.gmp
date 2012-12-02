@@ -3,6 +3,8 @@
 config.*
 Makefile
 .libs
+*.tmp
+lex.yy.c
 
 demos/calc/calc-config.h
 demos/pexpr-config.h
