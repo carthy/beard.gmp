@@ -1,4 +1,4 @@
-/* x86 fat binary initializers.
+/* x86_64 fat binary initializers.
 
    Contributed to the GNU project by Kevin Ryde (original x86_32 code) and
    Torbjorn Granlund (port to x86_64)
@@ -7,7 +7,7 @@
    THEY'RE ALMOST CERTAIN TO BE SUBJECT TO INCOMPATIBLE CHANGES OR DISAPPEAR
    COMPLETELY IN FUTURE GNU MP RELEASES.
 
-Copyright 2003, 2004, 2009, 2011 Free Software Foundation, Inc.
+Copyright 2003, 2004, 2009, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -39,7 +39,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 
 
 /* fat_entry.asm */
-long __gmpn_cpuid __GMP_PROTO ((char dst[12], int id));
+long __gmpn_cpuid (char [12], int);
 
 
 #if WANT_FAKE_CPUID
@@ -69,6 +69,7 @@ static struct {
   { "k8",         "AuthenticAMD", MAKE_FMS (15, 0) },
   { "k10",        "AuthenticAMD", MAKE_FMS (16, 0) },
   { "bobcat",     "AuthenticAMD", MAKE_FMS (20, 1) },
+  { "bulldozer",  "AuthenticAMD", MAKE_FMS (21, 1) },
 
   { "nano",       "CentaurHauls", MAKE_FMS (6, 15) },
 };
@@ -124,28 +125,44 @@ typedef DECL_preinv_mod_1    ((*preinv_mod_1_t));
 
 struct cpuvec_t __gmpn_cpuvec = {
   __MPN(add_n_init),
+  __MPN(addlsh1_n_init),
+  __MPN(addlsh2_n_init),
   __MPN(addmul_1_init),
+  __MPN(addmul_2_init),
+  __MPN(bdiv_dbm1c_init),
+  __MPN(com_init),
   __MPN(copyd_init),
   __MPN(copyi_init),
   __MPN(divexact_1_init),
-  __MPN(divexact_by3c_init),
   __MPN(divrem_1_init),
   __MPN(gcd_1_init),
   __MPN(lshift_init),
+  __MPN(lshiftc_init),
   __MPN(mod_1_init),
+  __MPN(mod_1_1p_init),
+  __MPN(mod_1_1p_cps_init),
+  __MPN(mod_1s_2p_init),
+  __MPN(mod_1s_2p_cps_init),
+  __MPN(mod_1s_4p_init),
+  __MPN(mod_1s_4p_cps_init),
   __MPN(mod_34lsub1_init),
   __MPN(modexact_1c_odd_init),
   __MPN(mul_1_init),
   __MPN(mul_basecase_init),
+  __MPN(mullo_basecase_init),
   __MPN(preinv_divrem_1_init),
   __MPN(preinv_mod_1_init),
+  __MPN(redc_1_init),
+  __MPN(redc_2_init),
   __MPN(rshift_init),
   __MPN(sqr_basecase_init),
   __MPN(sub_n_init),
+  __MPN(sublsh1_n_init),
   __MPN(submul_1_init),
   0
 };
 
+int __gmpn_cpuvec_initialized = 0;
 
 /* The following setups start with generic x86, then overwrite with
    specifics for a chip, and higher versions of that chip.
@@ -187,6 +204,11 @@ __gmpn_cpuvec_init (void)
   family = ((fms >> 8) & 0xf) + ((fms >> 20) & 0xff);
   model = ((fms >> 4) & 0xf) + ((fms >> 12) & 0xf0);
 
+  /* Check extended feature flags */
+  __gmpn_cpuid (dummy_string, 0x80000001);
+  if ((dummy_string[4 + 29 / 8] & (1 << (29 % 8))) == 0)
+    abort (); /* longmode-capable-bit turned off! */
+
   /*********************************************************/
   /*** WARNING: keep this list in sync with config.guess ***/
   /*********************************************************/
@@ -194,30 +216,9 @@ __gmpn_cpuvec_init (void)
     {
       switch (family)
 	{
-	case 4:
-	case 5:
-	  abort ();		/* 32-bit processors */
-
 	case 6:
 	  switch (model)
 	    {
-	    case 0x00:
-	    case 0x01:
-	    case 0x02:
-	    case 0x03:
-	    case 0x04:
-	    case 0x05:
-	    case 0x06:
-	    case 0x07:
-	    case 0x08:
-	    case 0x09:		/* Banias */
-	    case 0x0a:
-	    case 0x0b:
-	    case 0x0c:
-	    case 0x0d:		/* Dothan */
-	    case 0x0e:		/* Yonah */
-	      abort ();		/* 32-bit processors */
-
 	    case 0x0f:		/* Conroe Merom Kentsfield Allendale */
 	    case 0x10:
 	    case 0x11:
@@ -233,9 +234,10 @@ __gmpn_cpuvec_init (void)
 	      CPUVEC_SETUP_core2;
 	      break;
 
-	    case 0x1c:		/* Silverthorne */
-	    case 0x26:		/* Lincroft */
-	    case 0x27:		/* Saltwell */
+	    case 0x1c:		/* Atom Silverthorne */
+	    case 0x26:		/* Atom Lincroft */
+	    case 0x27:		/* Atom Saltwell? */
+	    case 0x36:		/* Atom Cedarview/Saltwell */
 	      CPUVEC_SETUP_atom;
 	      break;
 
@@ -261,7 +263,10 @@ __gmpn_cpuvec_init (void)
 
 	    case 0x2a:		/* SB */
 	    case 0x2d:		/* SBC-EP */
+	    case 0x3a:		/* IBR */
+	    case 0x3c:		/* Haswell */
 	      CPUVEC_SETUP_core2;
+	      CPUVEC_SETUP_coreinhm;
 	      CPUVEC_SETUP_coreisbr;
 	      break;
 	    }
@@ -276,28 +281,39 @@ __gmpn_cpuvec_init (void)
     {
       switch (family)
 	{
-	case 5:
-	case 6:
-	  abort ();
-
-	case 15:		/* k8 */
-	case 16:		/* k10 */
-	  /* CPUVEC_SETUP_athlon */
+	case 0x0f:		/* k8 */
+	case 0x11:		/* "fam 11h", mix of k8 and k10 */
+	case 0x13:
+	case 0x16:
+	case 0x17:
+	  CPUVEC_SETUP_k8;
 	  break;
+
+	case 0x10:		/* k10 */
+	case 0x12:		/* k10 (llano) */
+	  CPUVEC_SETUP_k8;
+	  CPUVEC_SETUP_k10;
+	  break;
+
+	case 0x14:		/* bobcat */
+	  CPUVEC_SETUP_k8;
+	  CPUVEC_SETUP_k10;
+	  CPUVEC_SETUP_bobcat;
+	  break;
+
+	case 0x15:		/* bulldozer */
+	  CPUVEC_SETUP_k8;
+	  CPUVEC_SETUP_k10;
+	  CPUVEC_SETUP_bd1;
 	}
     }
   else if (strcmp (vendor_string, "CentaurHauls") == 0)
     {
       switch (family)
 	{
-	case 5:
-	  abort ();		/* 32-bit processors */
-
 	case 6:
-	  if (model < 15)
-	    abort ();		/* 32-bit processors */
-
-	  CPUVEC_SETUP_nano;
+	  if (model >= 15)
+	    CPUVEC_SETUP_nano;
 	  break;
 	}
     }
@@ -315,5 +331,5 @@ __gmpn_cpuvec_init (void)
 
   /* Set this once the threshold fields are ready.
      Use volatile to prevent it getting moved.  */
-  ((volatile struct cpuvec_t *) &__gmpn_cpuvec)->initialized = 1;
+  *((volatile int *) &__gmpn_cpuvec_initialized) = 1;
 }

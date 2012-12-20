@@ -17,20 +17,20 @@
 
 # Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 #
-# This file is part of the GNU MP Library.
+# This file is part of the GNU MP Library test suite.
 #
-# The GNU MP Library is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or (at your
-# option) any later version.
+# The GNU MP Library test suite is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of the License,
+# or (at your option) any later version.
 #
-# The GNU MP Library is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-# License for more details.
+# The GNU MP Library test suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU General Public License along with
+# the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.
 
 # Copyright 1996, 1998, 1999, 2000, 2001, 2002 Free Software Foundation,
 # Inc.
@@ -68,7 +68,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-ANSI2KNR = $(top_builddir)/ansi2knr
 DIST_COMMON = $(srcdir)/../mpn/Makeasm.am $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 check_PROGRAMS = t-bswap$(EXEEXT) t-constants$(EXEEXT) \
@@ -86,43 +85,43 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__DEPENDENCIES_1 =
-am_libtests_la_OBJECTS = memory$U.lo misc$U.lo refmpf$U.lo refmpn$U.lo \
-	refmpq$U.lo refmpz$U.lo spinner$U.lo trace$U.lo
+am_libtests_la_OBJECTS = memory.lo misc.lo refmpf.lo refmpn.lo \
+	refmpq.lo refmpz.lo spinner.lo trace.lo
 libtests_la_OBJECTS = $(am_libtests_la_OBJECTS)
 t_bswap_SOURCES = t-bswap.c
-t_bswap_OBJECTS = t-bswap$U.$(OBJEXT)
+t_bswap_OBJECTS = t-bswap.$(OBJEXT)
 t_bswap_LDADD = $(LDADD)
 t_bswap_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_constants_SOURCES = t-constants.c
-t_constants_OBJECTS = t-constants$U.$(OBJEXT)
+t_constants_OBJECTS = t-constants.$(OBJEXT)
 t_constants_LDADD = $(LDADD)
 t_constants_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_count_zeros_SOURCES = t-count_zeros.c
-t_count_zeros_OBJECTS = t-count_zeros$U.$(OBJEXT)
+t_count_zeros_OBJECTS = t-count_zeros.$(OBJEXT)
 t_count_zeros_LDADD = $(LDADD)
 t_count_zeros_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_gmpmax_SOURCES = t-gmpmax.c
-t_gmpmax_OBJECTS = t-gmpmax$U.$(OBJEXT)
+t_gmpmax_OBJECTS = t-gmpmax.$(OBJEXT)
 t_gmpmax_LDADD = $(LDADD)
 t_gmpmax_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_hightomask_SOURCES = t-hightomask.c
-t_hightomask_OBJECTS = t-hightomask$U.$(OBJEXT)
+t_hightomask_OBJECTS = t-hightomask.$(OBJEXT)
 t_hightomask_LDADD = $(LDADD)
 t_hightomask_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_modlinv_SOURCES = t-modlinv.c
-t_modlinv_OBJECTS = t-modlinv$U.$(OBJEXT)
+t_modlinv_OBJECTS = t-modlinv.$(OBJEXT)
 t_modlinv_LDADD = $(LDADD)
 t_modlinv_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_parity_SOURCES = t-parity.c
-t_parity_OBJECTS = t-parity$U.$(OBJEXT)
+t_parity_OBJECTS = t-parity.$(OBJEXT)
 t_parity_LDADD = $(LDADD)
 t_parity_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_popc_SOURCES = t-popc.c
-t_popc_OBJECTS = t-popc$U.$(OBJEXT)
+t_popc_OBJECTS = t-popc.$(OBJEXT)
 t_popc_LDADD = $(LDADD)
 t_popc_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 t_sub_SOURCES = t-sub.c
-t_sub_OBJECTS = t-sub$U.$(OBJEXT)
+t_sub_OBJECTS = t-sub.$(OBJEXT)
 t_sub_LDADD = $(LDADD)
 t_sub_DEPENDENCIES = libtests.la $(top_builddir)/libgmp.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -284,8 +283,8 @@ SHELL = @SHELL@
 SPEED_CYCLECOUNTER_OBJ = @SPEED_CYCLECOUNTER_OBJ@
 STRIP = @STRIP@
 TAL_OBJECT = @TAL_OBJECT@
+TUNE_LIBS = @TUNE_LIBS@
 TUNE_SQR_OBJ = @TUNE_SQR_OBJ@
-U = @U@
 U_FOR_BUILD = @U_FOR_BUILD@
 VERSION = @VERSION@
 WITH_READLINE_01 = @WITH_READLINE_01@
@@ -332,7 +331,6 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 mpn_objects = @mpn_objects@
 mpn_objs_in_libgmp = @mpn_objs_in_libgmp@
-mpn_objs_in_libmp = @mpn_objs_in_libmp@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
@@ -346,7 +344,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = . devel mpn mpz mpq mpf rand misc cxx mpbsd
+SUBDIRS = . devel mpn mpz mpq mpf rand misc cxx
 
 # COMPILE minus CC.
 #
@@ -473,11 +471,6 @@ mostlyclean-compile:
 
 distclean-compile:
 	-rm -f *.tab.c
-$(top_builddir)/ansi2knr:
-	$(am__cd) $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) ./ansi2knr
-
-mostlyclean-kr:
-	-test "$U" = "" || rm -f *_.c
 
 .c.o:
 	$(COMPILE) -c $<
@@ -487,55 +480,6 @@ mostlyclean-kr:
 
 .c.lo:
 	$(LTCOMPILE) -c -o $@ $<
-amd64check_.c: amd64check.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/amd64check.c; then echo $(srcdir)/amd64check.c; else echo amd64check.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-memory_.c: memory.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/memory.c; then echo $(srcdir)/memory.c; else echo memory.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-misc_.c: misc.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/misc.c; then echo $(srcdir)/misc.c; else echo misc.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-refmpf_.c: refmpf.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/refmpf.c; then echo $(srcdir)/refmpf.c; else echo refmpf.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-refmpn_.c: refmpn.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/refmpn.c; then echo $(srcdir)/refmpn.c; else echo refmpn.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-refmpq_.c: refmpq.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/refmpq.c; then echo $(srcdir)/refmpq.c; else echo refmpq.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-refmpz_.c: refmpz.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/refmpz.c; then echo $(srcdir)/refmpz.c; else echo refmpz.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-spinner_.c: spinner.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/spinner.c; then echo $(srcdir)/spinner.c; else echo spinner.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-bswap_.c: t-bswap.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-bswap.c; then echo $(srcdir)/t-bswap.c; else echo t-bswap.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-constants_.c: t-constants.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-constants.c; then echo $(srcdir)/t-constants.c; else echo t-constants.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-count_zeros_.c: t-count_zeros.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-count_zeros.c; then echo $(srcdir)/t-count_zeros.c; else echo t-count_zeros.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-gmpmax_.c: t-gmpmax.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-gmpmax.c; then echo $(srcdir)/t-gmpmax.c; else echo t-gmpmax.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-hightomask_.c: t-hightomask.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-hightomask.c; then echo $(srcdir)/t-hightomask.c; else echo t-hightomask.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-modlinv_.c: t-modlinv.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-modlinv.c; then echo $(srcdir)/t-modlinv.c; else echo t-modlinv.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-parity_.c: t-parity.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-parity.c; then echo $(srcdir)/t-parity.c; else echo t-parity.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-popc_.c: t-popc.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-popc.c; then echo $(srcdir)/t-popc.c; else echo t-popc.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-sub_.c: t-sub.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-sub.c; then echo $(srcdir)/t-sub.c; else echo t-sub.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-trace_.c: trace.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/trace.c; then echo $(srcdir)/trace.c; else echo trace.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-x86check_.c: x86check.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/x86check.c; then echo $(srcdir)/x86check.c; else echo x86check.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-amd64check_.$(OBJEXT) amd64check_.lo memory_.$(OBJEXT) memory_.lo \
-misc_.$(OBJEXT) misc_.lo refmpf_.$(OBJEXT) refmpf_.lo \
-refmpn_.$(OBJEXT) refmpn_.lo refmpq_.$(OBJEXT) refmpq_.lo \
-refmpz_.$(OBJEXT) refmpz_.lo spinner_.$(OBJEXT) spinner_.lo \
-t-bswap_.$(OBJEXT) t-bswap_.lo t-constants_.$(OBJEXT) t-constants_.lo \
-t-count_zeros_.$(OBJEXT) t-count_zeros_.lo t-gmpmax_.$(OBJEXT) \
-t-gmpmax_.lo t-hightomask_.$(OBJEXT) t-hightomask_.lo \
-t-modlinv_.$(OBJEXT) t-modlinv_.lo t-parity_.$(OBJEXT) t-parity_.lo \
-t-popc_.$(OBJEXT) t-popc_.lo t-sub_.$(OBJEXT) t-sub_.lo \
-trace_.$(OBJEXT) trace_.lo x86check_.$(OBJEXT) x86check_.lo : \
-$(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -916,7 +860,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
 pdf: pdf-recursive
@@ -929,9 +873,8 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) \
-	$(top_builddir)/ansi2knr check-am ctags-recursive install-am \
-	install-strip tags-recursive
+.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) check-am \
+	ctags-recursive install-am install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-TESTS check-am clean \
@@ -946,8 +889,8 @@ uninstall-am:
 	install-strip installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-kr mostlyclean-libtool pdf pdf-am ps ps-am tags \
-	tags-recursive uninstall uninstall-am
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am
 
 
 # .s assembler, no preprocessing.

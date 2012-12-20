@@ -17,20 +17,20 @@
 
 # Copyright 2001, 2002 Free Software Foundation, Inc.
 #
-# This file is part of the GNU MP Library.
+# This file is part of the GNU MP Library test suite.
 #
-# The GNU MP Library is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or (at your
-# option) any later version.
+# The GNU MP Library test suite is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of the License,
+# or (at your option) any later version.
 #
-# The GNU MP Library is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-# License for more details.
+# The GNU MP Library test suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU General Public License along with
+# the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -50,7 +50,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-ANSI2KNR = $(top_builddir)/ansi2knr
 check_PROGRAMS = t-printf$(EXEEXT) t-scanf$(EXEEXT) t-locale$(EXEEXT)
 subdir = tests/misc
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -64,17 +63,17 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 t_locale_SOURCES = t-locale.c
-t_locale_OBJECTS = t-locale$U.$(OBJEXT)
+t_locale_OBJECTS = t-locale.$(OBJEXT)
 t_locale_LDADD = $(LDADD)
 t_locale_DEPENDENCIES = $(top_builddir)/tests/libtests.la \
 	$(top_builddir)/libgmp.la
 t_printf_SOURCES = t-printf.c
-t_printf_OBJECTS = t-printf$U.$(OBJEXT)
+t_printf_OBJECTS = t-printf.$(OBJEXT)
 t_printf_LDADD = $(LDADD)
 t_printf_DEPENDENCIES = $(top_builddir)/tests/libtests.la \
 	$(top_builddir)/libgmp.la
 t_scanf_SOURCES = t-scanf.c
-t_scanf_OBJECTS = t-scanf$U.$(OBJEXT)
+t_scanf_OBJECTS = t-scanf.$(OBJEXT)
 t_scanf_LDADD = $(LDADD)
 t_scanf_DEPENDENCIES = $(top_builddir)/tests/libtests.la \
 	$(top_builddir)/libgmp.la
@@ -195,8 +194,8 @@ SHELL = @SHELL@
 SPEED_CYCLECOUNTER_OBJ = @SPEED_CYCLECOUNTER_OBJ@
 STRIP = @STRIP@
 TAL_OBJECT = @TAL_OBJECT@
+TUNE_LIBS = @TUNE_LIBS@
 TUNE_SQR_OBJ = @TUNE_SQR_OBJ@
-U = @U@
 U_FOR_BUILD = @U_FOR_BUILD@
 VERSION = @VERSION@
 WITH_READLINE_01 = @WITH_READLINE_01@
@@ -243,7 +242,6 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 mpn_objects = @mpn_objects@
 mpn_objs_in_libgmp = @mpn_objs_in_libgmp@
-mpn_objs_in_libmp = @mpn_objs_in_libmp@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
@@ -323,11 +321,6 @@ mostlyclean-compile:
 
 distclean-compile:
 	-rm -f *.tab.c
-$(top_builddir)/ansi2knr:
-	$(am__cd) $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) ./ansi2knr
-
-mostlyclean-kr:
-	-test "$U" = "" || rm -f *_.c
 
 .c.o:
 	$(COMPILE) -c $<
@@ -337,14 +330,6 @@ mostlyclean-kr:
 
 .c.lo:
 	$(LTCOMPILE) -c -o $@ $<
-t-locale_.c: t-locale.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-locale.c; then echo $(srcdir)/t-locale.c; else echo t-locale.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-printf_.c: t-printf.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-printf.c; then echo $(srcdir)/t-printf.c; else echo t-printf.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-scanf_.c: t-scanf.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/t-scanf.c; then echo $(srcdir)/t-scanf.c; else echo t-scanf.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-t-locale_.$(OBJEXT) t-locale_.lo t-printf_.$(OBJEXT) t-printf_.lo \
-t-scanf_.$(OBJEXT) t-scanf_.lo : $(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -614,7 +599,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
 pdf: pdf-am
@@ -627,7 +612,7 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: $(top_builddir)/ansi2knr check-am install-am install-strip
+.MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
 	clean-checkPROGRAMS clean-generic clean-libtool ctags \
@@ -640,8 +625,8 @@ uninstall-am:
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-kr mostlyclean-libtool pdf \
-	pdf-am ps ps-am tags uninstall uninstall-am
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am
 
 
 $(top_builddir)/tests/libtests.la:

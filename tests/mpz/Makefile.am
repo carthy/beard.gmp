@@ -3,20 +3,20 @@
 # Copyright 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2009, 2012 Free Software
 # Foundation, Inc.
 #
-# This file is part of the GNU MP Library.
+# This file is part of the GNU MP Library test suite.
 #
-# The GNU MP Library is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or (at your
-# option) any later version.
+# The GNU MP Library test suite is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of the License,
+# or (at your option) any later version.
 #
-# The GNU MP Library is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-# License for more details.
+# The GNU MP Library test suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU General Public License along with
+# the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.
 
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/tests
@@ -27,10 +27,10 @@ check_PROGRAMS = t-addsub t-cmp t-mul t-mul_i t-tdiv t-tdiv_ui t-fdiv   \
   convert io t-inp_str logic bit t-powm t-powm_ui t-pow t-div_2exp reuse   \
   t-root t-perfsqr t-perfpow t-jac t-bin t-get_d t-get_d_2exp t-get_si	\
   t-set_d t-set_si							\
-  t-fac_ui t-fib_ui t-lucnum_ui t-scan t-fits                           \
+  t-fac_ui t-mfac_uiui t-primorial_ui t-fib_ui t-lucnum_ui t-scan t-fits   \
   t-divis t-divis_2exp t-cong t-cong_2exp t-sizeinbase t-set_str        \
   t-aorsmul t-cmp_d t-cmp_si t-hamdist t-oddeven t-popcount t-set_f     \
-  t-io_raw t-import t-export t-pprime_p t-nextprime
+  t-io_raw t-import t-export t-pprime_p t-nextprime t-remove
 
 TESTS = $(check_PROGRAMS)
 

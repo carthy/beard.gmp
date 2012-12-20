@@ -2,20 +2,20 @@
 
 # Copyright 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 #
-# This file is part of the GNU MP Library.
+# This file is part of the GNU MP Library test suite.
 #
-# The GNU MP Library is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or (at your
-# option) any later version.
+# The GNU MP Library test suite is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of the License,
+# or (at your option) any later version.
 #
-# The GNU MP Library is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-# License for more details.
+# The GNU MP Library test suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU General Public License along with
+# the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.
 
 
 # LDADD has an explicit -L of $(top_builddir)/.libs for the benefit of gcc
@@ -30,8 +30,10 @@ LDADD = -L$(top_builddir)/.libs \
   $(top_builddir)/libgmp.la
 
 if WANT_CXX
-check_PROGRAMS = t-assign t-binary t-cast t-constr t-headers \
-  t-istream t-locale t-misc t-ops t-ostream t-prec t-rand t-ternary t-unary
+check_PROGRAMS = t-assign t-binary t-cast t-constr t-cxx11 \
+  t-headers t-iostream t-istream t-locale t-misc t-mix \
+  t-ops t-ops2 t-ops3 t-ostream t-prec \
+  t-rand t-ternary t-unary
 TESTS = $(check_PROGRAMS)
 endif
 
@@ -39,11 +41,16 @@ t_assign_SOURCES  = t-assign.cc
 t_binary_SOURCES  = t-binary.cc
 t_cast_SOURCES    = t-cast.cc
 t_constr_SOURCES  = t-constr.cc
+t_cxx11_SOURCES   = t-cxx11.cc
 t_headers_SOURCES = t-headers.cc
+t_iostream_SOURCES= t-iostream.cc
 t_istream_SOURCES = t-istream.cc
 t_locale_SOURCES  = t-locale.cc clocale.c
 t_misc_SOURCES    = t-misc.cc
+t_mix_SOURCES     = t-mix.cc
 t_ops_SOURCES     = t-ops.cc
+t_ops2_SOURCES    = t-ops2.cc
+t_ops3_SOURCES    = t-ops3.cc
 t_ostream_SOURCES = t-ostream.cc
 t_prec_SOURCES    = t-prec.cc
 t_rand_SOURCES    = t-rand.cc

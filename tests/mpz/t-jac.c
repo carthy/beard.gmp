@@ -2,20 +2,20 @@
 
 Copyright 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
-This file is part of the GNU MP Library.
+This file is part of the GNU MP Library test suite.
 
-The GNU MP Library is free software; you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
-option) any later version.
+The GNU MP Library test suite is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 3 of the License,
+or (at your option) any later version.
 
-The GNU MP Library is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-License for more details.
+The GNU MP Library test suite is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public License
-along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
+You should have received a copy of the GNU General Public License along with
+the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 
 
 /* With no arguments the various Kronecker/Jacobi symbol routines are
@@ -41,6 +41,8 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #include "gmp-impl.h"
 #include "tests.h"
 
+/* For count_leading_zeros in mpz_nextprime_step. */
+#include "longlong.h"
 
 #ifdef _LONG_LONG_LIMB
 #define LL(l,ll)  ll
@@ -199,6 +201,10 @@ try_pari (mpz_srcptr a, mpz_srcptr b, int answer)
 void
 try_each (mpz_srcptr a, mpz_srcptr b, int answer)
 {
+#if 0
+  fprintf(stderr, "asize = %d, bsize = %d\n",
+	  mpz_sizeinbase (a, 2), mpz_sizeinbase (b, 2));
+#endif
   if (option_pari)
     {
       try_pari (a, b, answer);
@@ -613,6 +619,33 @@ check_data (void)
     /* special values inducing a==b==1 at the end of jac_or_kron() */
     { "0x10000000000000000000000000000000000000000000000001",
       "0x10000000000000000000000000000000000000000000000003", 1 },
+
+    /* Test for previous bugs in jacobi_2. */
+    { "0x43900000000", "0x42400000439", -1 }, /* 32-bit limbs */
+    { "0x4390000000000000000", "0x4240000000000000439", -1 }, /* 64-bit limbs */
+
+    { "198158408161039063", "198158360916398807", -1 },
+
+    /* Some tests involving large quotients in the continued fraction
+       expansion. */
+    { "37200210845139167613356125645445281805",
+      "451716845976689892447895811408978421929", -1 },
+    { "67674091930576781943923596701346271058970643542491743605048620644676477275152701774960868941561652032482173612421015",
+      "4902678867794567120224500687210807069172039735", 0 },
+    { "2666617146103764067061017961903284334497474492754652499788571378062969111250584288683585223600172138551198546085281683283672592", "2666617146103764067061017961903284334497474492754652499788571378062969111250584288683585223600172138551198546085281683290481773", 1 },
+
+    /* Exersizes the case asize == 1, btwos > 0 in mpz_jacobi. */
+    { "804609", "421248363205206617296534688032638102314410556521742428832362659824", 1 } ,
+    { "4190209", "2239744742177804210557442048984321017460028974602978995388383905961079286530650825925074203175536427000", 1 },
+
+    /* Exersizes the case asize == 1, btwos = 63 in mpz_jacobi
+       (relevant when GMP_LIMB_BITS == 64). */
+    { "17311973299000934401", "1675975991242824637446753124775689449936871337036614677577044717424700351103148799107651171694863695242089956242888229458836426332300124417011114380886016", 1 },
+    { "3220569220116583677", "41859917623035396746", -1 },
+
+    /* Other test cases that triggered bugs during development. */
+    { "37200210845139167613356125645445281805", "340116213441272389607827434472642576514", -1 },
+    { "74400421690278335226712251290890563610", "451716845976689892447895811408978421929", -1 },
   };
 
   int    i;
@@ -652,7 +685,7 @@ check_squares_zi (void)
   for (i = 0; i < 50; i++)
     {
       mpz_urandomb (bs, rands, 32);
-      size_range = mpz_get_ui (bs) % 10 + 2;
+      size_range = mpz_get_ui (bs) % 10 + i/8 + 2;
 
       mpz_urandomb (bs, rands, size_range);
       an = mpz_get_ui (bs);
@@ -719,6 +752,350 @@ check_a_zero (void)
 }
 
 
+/* Assumes that b = prod p_k^e_k */
+int
+ref_jacobi (mpz_srcptr a, mpz_srcptr b, unsigned nprime,
+	    mpz_t prime[], unsigned *exp)
+{
+  unsigned i;
+  int res;
+
+  for (i = 0, res = 1; i < nprime; i++)
+    if (exp[i])
+      {
+	int legendre = refmpz_legendre (a, prime[i]);
+	if (!legendre)
+	  return 0;
+	if (exp[i] & 1)
+	  res *= legendre;
+      }
+  return res;
+}
+
+void
+check_jacobi_factored (void)
+{
+#define PRIME_N 10
+#define PRIME_MAX_SIZE 50
+#define PRIME_MAX_EXP 4
+#define PRIME_A_COUNT 10
+#define PRIME_B_COUNT 5
+#define PRIME_MAX_B_SIZE 2000
+
+  gmp_randstate_ptr rands = RANDS;
+  mpz_t prime[PRIME_N];
+  unsigned exp[PRIME_N];
+  mpz_t a, b, t, bs;
+  unsigned i;
+
+  mpz_init (a);
+  mpz_init (b);
+  mpz_init (t);
+  mpz_init (bs);
+
+  /* Generate primes */
+  for (i = 0; i < PRIME_N; i++)
+    {
+      mp_size_t size;
+      mpz_init (prime[i]);
+      mpz_urandomb (bs, rands, 32);
+      size = mpz_get_ui (bs) % PRIME_MAX_SIZE + 2;
+      mpz_rrandomb (prime[i], rands, size);
+      if (mpz_cmp_ui (prime[i], 3) <= 0)
+	mpz_set_ui (prime[i], 3);
+      else
+	mpz_nextprime (prime[i], prime[i]);
+    }
+
+  for (i = 0; i < PRIME_B_COUNT; i++)
+    {
+      unsigned j, k;
+      mp_bitcnt_t bsize;
+
+      mpz_set_ui (b, 1);
+      bsize = 1;
+
+      for (j = 0; j < PRIME_N && bsize < PRIME_MAX_B_SIZE; j++)
+	{
+	  mpz_urandomb (bs, rands, 32);
+	  exp[j] = mpz_get_ui (bs) % PRIME_MAX_EXP;
+	  mpz_pow_ui (t, prime[j], exp[j]);
+	  mpz_mul (b, b, t);
+	  bsize = mpz_sizeinbase (b, 2);
+	}
+      for (k = 0; k < PRIME_A_COUNT; k++)
+	{
+	  int answer;
+	  mpz_rrandomb (a, rands, bsize + 2);
+	  answer = ref_jacobi (a, b, j, prime, exp);
+	  try_all (a, b, answer);
+	}
+    }
+  for (i = 0; i < PRIME_N; i++)
+    mpz_clear (prime[i]);
+
+  mpz_clear (a);
+  mpz_clear (b);
+  mpz_clear (t);
+  mpz_clear (bs);
+
+#undef PRIME_N
+#undef PRIME_MAX_SIZE
+#undef PRIME_MAX_EXP
+#undef PRIME_A_COUNT
+#undef PRIME_B_COUNT
+#undef PRIME_MAX_B_SIZE
+}
+
+static const unsigned char primegap[] =
+{
+  2,2,4,2,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,2,4,14,4,6,
+  2,10,2,6,6,4,6,6,2,10,2,4,2,12,12,4,2,4,6,2,10,6,6,6,2,6,4,2,10,14,4,2,
+  4,14,6,10,2,4,6,8,6,6,4,6,8,4,8,10,2,10,2,6,4,6,8,4,2,4,12,8,4,8,4,6,
+  12,2,18,6,10,6,6,2,6,10,6,6,2,6,6,4,2,12,10,2,4,6,6,2,12,4,6,8,10,8,10,8,
+  6,6,4,8,6,4,8,4,14,10,12,2,10,2,4,2,10,14,4,2,4,14,4,2,4,20,4,8,10,8,4,6,
+  6,14,4,6,6,8,6,12
+};
+
+#define NUMBER_OF_PRIMES 167
+
+/* Similar to mpz_nextprime, finds the first (odd) prime of the form n
+   + k * step, with k >= 1. If n and step has a common factor, it never
+   terminates... */
+static void
+mpz_nextprime_step (mpz_ptr p, mpz_srcptr n, mpz_srcptr step_in)
+{
+  unsigned short *moduli;
+  unsigned short *step_moduli;
+  unsigned long difference;
+  int i;
+  unsigned prime_limit;
+  unsigned long prime;
+  int cnt;
+  mp_size_t pn;
+  mp_bitcnt_t nbits;
+  unsigned incr;
+  mpz_t step, gcd;
+  TMP_SDECL;
+
+  ASSERT_ALWAYS (mpz_sgn (step_in) > 0);
+
+  /* Negative n could be supported, but currently aren't. */
+  ASSERT_ALWAYS (mpz_sgn (n) >= 0);
+
+  mpz_init (step);
+
+  switch ( (mpz_odd_p (n) << 1) + mpz_odd_p (step_in))
+    {
+    default:
+    case 0:
+      /* Both even. */
+      abort ();
+    case 1:
+      /* n even, step odd. Use odd k. */
+      mpz_mul_2exp (step, step_in, 1);
+      mpz_add (p, n, step_in);
+      break;
+    case 2:
+      /* n odd, step even. All k > 0 give odd result. */
+      mpz_set (step, step_in);
+      mpz_add (p, n, step_in);
+      break;
+    case 3:
+      /* Both n and step odd. Use even k. */
+      mpz_mul_2exp (step, step_in, 1);
+      mpz_add (p, n, step);
+      break;
+    }
+
+  ASSERT_ALWAYS (mpz_odd_p (p));
+  ASSERT_ALWAYS (mpz_even_p (step));
+
+  if (mpz_cmp_ui (p, 7) <= 0)
+    {
+      mpz_clear (step);
+      return;
+    }
+
+  mpz_init (gcd);
+  mpz_gcd (gcd, p, step);
+  ASSERT_ALWAYS (mpz_cmp_ui (gcd, 1) == 0);
+  mpz_clear (gcd);
+
+  pn = SIZ(p);
+  count_leading_zeros (cnt, PTR(p)[pn - 1]);
+  nbits = pn * GMP_NUMB_BITS - (cnt - GMP_NAIL_BITS);
+  if (nbits / 2 >= NUMBER_OF_PRIMES)
+    prime_limit = NUMBER_OF_PRIMES - 1;
+  else
+    prime_limit = nbits / 2;
+
+  TMP_SMARK;
+
+  /* Compute residues modulo small odd primes */
+  moduli = TMP_SALLOC_TYPE (prime_limit * sizeof moduli[0], unsigned short);
+  step_moduli = TMP_SALLOC_TYPE (prime_limit * sizeof step_moduli[0], unsigned short);
+
+  for (;;)
+    {
+      ASSERT_ALWAYS (mpz_odd_p (p));
+
+      /* FIXME: Compute lazily? */
+      prime = 3;
+      for (i = 0; i < prime_limit; i++)
+	{
+	  moduli[i] = mpz_fdiv_ui (p, prime);
+	  step_moduli[i] = mpz_fdiv_ui (step, prime);
+	  prime += primegap[i];
+	}
+
+      /* INCR_LIMIT * (max_prime - 1) must fit in an unsigned. */
+#define INCR_LIMIT 0x10000
+
+      for (difference = incr = 0; incr < INCR_LIMIT; difference ++)
+	{
+	  /* First check residues */
+	  prime = 3;
+	  for (i = 0; i < prime_limit; i++)
+	    {
+	      unsigned r;
+	      /* FIXME: Reduce moduli + incr and store back, to allow
+		 for division-free reductions. Alternatively, table
+		 primes[]'s inverses. */
+	      r = (moduli[i] + incr*step_moduli[i]) % prime;
+	      prime += primegap[i];
+
+	      if (r == 0)
+		goto next;
+	    }
+
+	  mpz_addmul_ui (p, step, difference);
+	  difference = 0;
+
+	  ASSERT_ALWAYS (mpz_odd_p (p));
+
+	  /* Miller-Rabin test */
+	  if (mpz_millerrabin (p, 10))
+	    goto done;
+	next:;
+	  incr ++;
+	}
+
+      mpz_addmul_ui (p, step, difference);
+      difference = 0;
+    }
+ done:
+  mpz_clear (step);
+  TMP_SFREE;
+}
+
+void
+check_large_quotients (void)
+{
+#define COUNT 5
+#define MAX_THRESHOLD 15
+
+  gmp_randstate_ptr rands = RANDS;
+  unsigned i;
+  mpz_t op1, op2, temp1, temp2, bs;
+
+  mpz_init (op1);
+  mpz_init (op2);
+  mpz_init (temp1);
+  mpz_init (temp2);
+  mpz_init (bs);
+
+  for (i = 0; i < COUNT; i++)
+    {
+      unsigned j;
+      unsigned chain_len;
+      int answer;
+      mp_bitcnt_t gcd_size;
+
+      /* Code originally copied from t-gcd.c */
+      mpz_set_ui (op1, 0);
+      mpz_urandomb (bs, rands, 32);
+      mpz_urandomb (bs, rands, mpz_get_ui (bs) % 10 + 1);
+
+      gcd_size = 1 + mpz_get_ui (bs);
+      if (gcd_size & 1)
+	{
+	  gcd_size = 0;
+	  mpz_set_ui (op2, 1);
+	}
+      else
+	{
+	  mpz_rrandomb (op2, rands, gcd_size);
+	  mpz_add_ui (op2, op2, 2);
+	}
+
+      mpz_urandomb (bs, rands, 32);
+      chain_len = 1 + mpz_get_ui (bs) % (GMP_NUMB_BITS * MAX_THRESHOLD / 256);
+
+      for (j = 0; j < chain_len; j++)
+	{
+	  mpz_urandomb (bs, rands, 32);
+	  mpz_urandomb (bs, rands, mpz_get_ui (bs) % 12 + 1);
+	  mpz_rrandomb (temp2, rands, mpz_get_ui (bs) + 1);
+	  mpz_add_ui (temp2, temp2, 1);
+	  mpz_mul (temp1, op2, temp2);
+	  mpz_add (op1, op1, temp1);
+
+	  /* Don't generate overly huge operands.  */
+	  if (SIZ (op1) > 3 * MAX_THRESHOLD)
+	    {
+	      mpz_swap (op1, op2);
+	      break;
+	    }
+
+	  mpz_urandomb (bs, rands, 32);
+	  mpz_urandomb (bs, rands, mpz_get_ui (bs) % 12 + 1);
+	  mpz_rrandomb (temp2, rands, mpz_get_ui (bs) + 1);
+	  mpz_add_ui (temp2, temp2, 1);
+	  mpz_mul (temp1, op1, temp2);
+	  mpz_add (op2, op2, temp1);
+
+	  /* Don't generate overly huge operands.  */
+	  if (SIZ (op2) > 3 * MAX_THRESHOLD)
+	    break;
+	}
+      ASSERT_ALWAYS (mpz_cmp (op1, op2) < 0);
+
+      if (gcd_size)
+	answer = 0;
+      else
+	{
+	  if (mpz_odd_p (op1) && mpz_probab_prime_p (op1, 5))
+	    {
+	      answer = refmpz_legendre (op2, op1);
+	    }
+	  else if (mpz_odd_p (op2) && mpz_probab_prime_p (op2, 5))
+	    {
+	      mpz_swap (op1, op2);
+	      answer = refmpz_legendre (op2, op1);
+	    }
+	  else
+	    {
+	      mpz_nextprime_step (op1, op2, op1);
+	      answer = refmpz_legendre (op2, op1);
+	    }
+	}
+      try_all (op2, op1, answer);
+#if 0
+      gmp_printf("(a/b) = %d:\n"
+		 "a = %Zd\n"
+		 "b = %Zd\n", answer, op2, op1);
+#endif
+    }
+  mpz_clear (op1);
+  mpz_clear (op2);
+  mpz_clear (temp1);
+  mpz_clear (temp2);
+  mpz_clear (bs);
+#undef COUNT
+#undef MAX_THRESHOLD
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -741,7 +1118,8 @@ try(a,b,answer) =\n\
   check_data ();
   check_squares_zi ();
   check_a_zero ();
-
+  check_jacobi_factored ();
+  check_large_quotients ();
   tests_end ();
   exit (0);
 }

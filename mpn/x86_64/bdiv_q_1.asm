@@ -1,8 +1,8 @@
 dnl  AMD64 mpn_bdiv_q_1, mpn_pi1_bdiv_q_1 -- schoolbook Hensel division by
 dnl  1-limb divisor, returning quotient only.
 
-dnl  Copyright 2001, 2002, 2004, 2005, 2006, 2009 Free Software Foundation,
-dnl  Inc.
+dnl  Copyright 2001, 2002, 2004, 2005, 2006, 2009, 2011, 2012 Free Software
+dnl  Foundation, Inc.
 
 dnl  This file is part of the GNU MP Library.
 
@@ -23,12 +23,13 @@ include(`../config.m4')
 
 
 C	     cycles/limb
-C K8,K9:	10
-C K10:		10
-C P4:		33
-C P6 core2:	13.25
-C P6 corei7:	14
-C P6 atom:	42
+C AMD K8,K9	10
+C AMD K10	10
+C Intel P4	33
+C Intel core2	13.25
+C Intel corei	14
+C Intel atom	42
+C VIA nano	 ?
 
 
 C INPUT PARAMETERS
@@ -40,10 +41,14 @@ C di		r8	just mpn_pi1_bdiv_q_1
 C shift		r9	just mpn_pi1_bdiv_q_1
 
 
+ABI_SUPPORT(DOS64)
+ABI_SUPPORT(STD64)
+
 ASM_START()
 	TEXT
 	ALIGN(16)
 PROLOGUE(mpn_bdiv_q_1)
+	FUNC_ENTRY(4)
 	push	%rbx
 
 	mov	%rcx, %rax
@@ -90,6 +95,9 @@ L(evn):	bsf	%rax, %rcx
 EPILOGUE()
 
 PROLOGUE(mpn_pi1_bdiv_q_1)
+	FUNC_ENTRY(4)
+IFDOS(`	mov	56(%rsp), %r8	')
+IFDOS(`	mov	64(%rsp), %r9	')
 	push	%rbx
 
 	mov	%rcx, %r11		C d
@@ -143,11 +151,13 @@ L(ent):	imul	%r8, %rax
 	imul	%r8, %rax
 	mov	%rax, (%rdi)
 	pop	%rbx
+	FUNC_EXIT()
 	ret
 
 L(one):	shr	R8(%rcx), %rax
 	imul	%r8, %rax
 	mov	%rax, (%rdi)
 	pop	%rbx
+	FUNC_EXIT()
 	ret
 EPILOGUE()

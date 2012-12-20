@@ -137,7 +137,6 @@ How to install and use the GNU multiple precision arithmetic library, version @v
 * Formatted Output::           @code{printf} style output.
 * Formatted Input::            @code{scanf} style input.
 * C++ Class Interface::        Class wrappers around GMP types.
-* BSD Compatible Functions::   All functions found in BSD MP.
 * Custom Allocation::          How to customize the internal allocation.
 * Language Bindings::          Using GMP from other languages.
 * Algorithms::                 What happens behind the scenes.
@@ -860,11 +859,7 @@ CPUs not listed will use generic C code.
 @item Generic C Build
 @cindex Generic C
 If some of the assembly code causes problems, or if otherwise desired, the
-generic C code can be selected with CPU @samp{none}.  For example,
-
-@example
-./configure --host=none-unknown-freebsd3.5
-@end example
+generic C code can be selected with the configure @option{--disable-assembly}.
 
 Note that this will run quite slowly, but it should be portable and should at
 least make it possible to get something running if all else fails.
@@ -924,8 +919,7 @@ preprocessor should be set in @samp{CPPFLAGS} rather than @samp{CFLAGS}.
 Compiling is done with both @samp{CPPFLAGS} and @samp{CFLAGS}, but
 preprocessing uses just @samp{CPPFLAGS}.  This distinction is because most
 preprocessors won't accept all the flags the compiler does.  Preprocessing is
-done separately in some configure tests, and in the @samp{ansi2knr} support
-for K&R compilers.
+done separately in some configure tests.
 
 @item @option{CC_FOR_BUILD}
 @cindex @code{CC_FOR_BUILD}
@@ -1043,14 +1037,6 @@ debugging memory related problems (@pxref{Debugging}).
 By default multiplications are done using Karatsuba, 3-way Toom, higher degree
 Toom, and Fermat FFT@.  The FFT is only used on large to very large operands
 and can be disabled to save code size if desired.
-
-@item Berkeley MP, @option{--enable-mpbsd}
-@cindex Berkeley MP compatible functions
-@cindex BSD MP compatible functions
-@cindex @code{--enable-mpbsd}
-The Berkeley MP compatibility library (@file{libmp}) and header file
-(@file{mp.h}) are built and installed only if @option{--enable-mpbsd} is used.
-@xref{BSD Compatible Functions}.
 
 @item Assertion Checking, @option{--enable-assert}
 @cindex Assertion checking
@@ -1299,7 +1285,7 @@ support for n32 or 64 and so only gets a 32-bit limb and the MIPS 2 code.
 @item PowerPC 64 (@samp{powerpc64}, @samp{powerpc620}, @samp{powerpc630}, @samp{powerpc970}, @samp{power4}, @samp{power5})
 @cindex PowerPC
 @table @asis
-@item @samp{ABI=aix64}
+@item @samp{ABI=mode64}
 @cindex AIX
 The AIX 64 ABI uses 64-bit limbs and pointers and is the default on PowerPC 64
 @samp{*-*-aix*} systems.  Applications must be compiled with
@@ -1309,31 +1295,28 @@ gcc  -maix64
 xlc  -q64
 @end example
 
-@item @samp{ABI=mode64}
-The @samp{mode64} ABI uses 64-bit limbs and pointers, and is the default on
-64-bit GNU/Linux, BSD, and Mac OS X/Darwin systems.  Applications must be
-compiled with
+On 64-bit GNU/Linux, BSD, and Mac OS X/Darwin systems, the applications must
+be compiled with
 
 @example
 gcc  -m64
 @end example
 
 @item @samp{ABI=mode32}
-@cindex AIX
 The @samp{mode32} ABI uses a 64-bit @code{long long} limb but with the chip
 still in 32-bit mode and using 32-bit calling conventions.  This is the default
 for systems where the true 64-bit ABI is unavailable.  No special compiler
-options are typically needed for applications.
+options are typically needed for applications.  This ABI is not available under
+AIX.
 
 @item @samp{ABI=32}
 This is the basic 32-bit PowerPC ABI, with a 32-bit limb.  No special compiler
 options are needed for applications.
 @end table
 
-GMP's speed is greatest for @samp{aix64} and @samp{mode64}.  In @samp{ABI=32}
-only the 32-bit ISA is used and this doesn't make full use of a 64-bit chip.
-On a suitable system we could perhaps use more of the ISA, but there are no
-plans to do so.
+GMP's speed is greatest for the @samp{mode64} ABI, the @samp{mode32} ABI is 2nd
+best.  In @samp{ABI=32} only the 32-bit ISA is used and this doesn't make full
+use of a 64-bit chip.
 
 @sp 1
 @need 1000
@@ -1602,11 +1585,11 @@ In GMP, CPU types @samp{power*} and @samp{powerpc*} will each use instructions
 not available on the other, so it's important to choose the right one for the
 CPU that will be used.  Currently GMP has no assembly code support for using
 just the common instruction subset.  To get executables that run on both, the
-current suggestion is to use the generic C code (CPU @samp{none}), possibly
-with appropriate compiler options (like @samp{-mcpu=common} for
+current suggestion is to use the generic C code (@option{--disable-assembly}),
+possibly with appropriate compiler options (like @samp{-mcpu=common} for
 @command{gcc}).  CPU @samp{rs6000} (which is not a CPU but a family of
 workstations) is accepted by @file{config.sub}, but is currently equivalent to
-@samp{none}.
+@option{--disable-assembly}.
 
 @item Sparc CPU Types
 @cindex Sparc
@@ -1624,8 +1607,8 @@ Options, gcc, Using the GNU Compiler Collection (GCC)}).
 This makes that code unsuitable for use with the special V9
 @samp{-mcmodel=embmedany} (which uses @code{g4} as a data segment pointer), and
 for applications wanting to use those registers for special purposes.  In these
-cases the only suggestion currently is to build GMP with CPU @samp{none} to
-avoid the assembly code.
+cases the only suggestion currently is to build GMP with
+@option{--disable-assembly} to avoid the assembly code.
 
 @item SunOS 4
 @cindex SunOS
@@ -1982,11 +1965,6 @@ Functions for floating-point arithmetic, with names beginning with
 functions is this class.  (@pxref{Floating-point Functions})
 
 @item
-Functions compatible with Berkeley MP, such as @code{itom}, @code{madd}, and
-@code{mult}.  The associated type is @code{MINT}.  (@pxref{BSD Compatible
-Functions})
-
-@item
 Fast low-level functions that operate on natural numbers.  These are used by
 the functions in the preceding groups, and you can also call them directly
 from very time-critical user programs.  These functions' names begin with
@@ -2243,10 +2221,6 @@ There are a number of compatibility issues between GMP 1 and GMP 2 that of
 course also apply when porting applications from GMP 1 to GMP 4.  Please
 see the GMP 2 manual for details.
 
-The Berkeley MP compatibility library (@pxref{BSD Compatible Functions}) is
-source and binary compatible with the standard @file{libmp}.
-
-@c @enumerate
 @c @item Integer division functions round the result differently.  The obsolete
 @c functions (@code{mpz_div}, @code{mpz_divmod}, @code{mpz_mdiv},
 @c @code{mpz_mdivmod}, etc) now all use floor rounding (i.e., they round the
@@ -2625,7 +2599,7 @@ Applications using the low-level @code{mpn} functions, however, will benefit
 from @option{--enable-assert} since it adds checks on the parameters of most
 such functions, many of which have subtle restrictions on their usage.  Note
 however that only the generic C code has checks, not the assembly code, so
-CPU @samp{none} should be used for maximum checking.
+@option{--disable-assembly} should be used for maximum checking.
 
 @item Temporary Memory Checking
 The build option @option{--enable-alloca=debug} arranges that each block of
@@ -2643,7 +2617,7 @@ To summarize the above, a GMP build for maximum debuggability would be
 
 @example
 ./configure --disable-shared --enable-assert \
-  --enable-alloca=debug --host=none CFLAGS=-g
+  --enable-alloca=debug --disable-assembly CFLAGS=-g
 @end example
 
 For C++, add @samp{--enable-cxx CXXFLAGS=-g}.
@@ -2660,12 +2634,13 @@ very very slowly.  On GNU/Linux for example,
 
 @cindex @command{checkergcc}
 @example
-./configure --host=none-pc-linux-gnu CC=checkergcc
+./configure --disable-assembly CC=checkergcc
 @end example
 
-@samp{--host=none} must be used, since the GMP assembly code doesn't support
-the checking scheme.  The GMP C++ features cannot be used, since current
-versions of checker (0.9.9.1) don't yet support the standard C++ library.
+@option{--disable-assembly} must be used, since the GMP assembly code doesn't
+support the checking scheme.  The GMP C++ features cannot be used, since
+current versions of checker (0.9.9.1) don't yet support the standard C++
+library.
 
 @item Valgrind
 @cindex Valgrind
@@ -3014,10 +2989,13 @@ Initialize @var{x}, with space for @var{n}-bit numbers, and set its value to 0.
 Calling this function instead of @code{mpz_init} or @code{mpz_inits} is never
 necessary; reallocation is handled automatically by GMP when needed.
 
-@var{n} is only the initial space, @var{x} will grow automatically in
-the normal way, if necessary, for subsequent values stored.  @code{mpz_init2}
-makes it possible to avoid such reallocations if a maximum size is known in
-advance.
+While @var{n} defines the initial space, @var{x} will grow automatically in the
+normal way, if necessary, for subsequent values stored.  @code{mpz_init2} makes
+it possible to avoid such reallocations if a maximum size is known in advance.
+
+In preparation for an operation, GMP often allocates one limb more than
+ultimately needed.  To make sure GMP will not perform reallocation for
+@var{x}, you need to add the number of bits in @code{mp_limb_t} to @var{n}.
 @end deftypefun
 
 @deftypefun void mpz_clear (mpz_t @var{x})
@@ -3519,9 +3497,10 @@ return 1 if @var{n} is probably prime (without being certain), or return 0 if
 @var{n} is definitely composite.
 
 This function does some trial divisions, then some Miller-Rabin probabilistic
-primality tests.  @var{reps} controls how many such tests are done, 5 to 10 is
-a reasonable number, more will reduce the chances of a composite being
-returned as ``probably prime''.
+primality tests.  The argument @var{reps} controls how many such tests are
+done; a higher value will reduce the chances of a composite being returned as
+``probably prime''.  25 is a reasonable number; a composite number will then be
+identified as a prime with a probability of less than @m{2^{-50},2^(-50)}.
 
 Miller-Rabin and similar tests can be more properly called compositeness
 tests.  Numbers which fail are known to be composite but those which pass
@@ -3579,7 +3558,7 @@ The value in @var{g} is always positive, even if one or both of @var{a} and
 @var{b} are negative (or zero if both inputs are zero).  The values in @var{s}
 and @var{t} are chosen such that normally, @math{@GMPabs{@var{s}} <
 @GMPabs{@var{b}} / (2 @var{g})} and @math{@GMPabs{@var{t}} < @GMPabs{@var{a}}
-/ (2 @var{g})}, and these relations define @var{s} and @var{t} uniquely. There
+/ (2 @var{g})}, and these relations define @var{s} and @var{t} uniquely.  There
 are a few exceptional cases:
 
 If @math{@GMPabs{@var{a}} = @GMPabs{@var{b}}}, then @math{@var{s} = 0},
@@ -3656,9 +3635,19 @@ result in @var{rop}.  The return value is how many such occurrences were
 removed.
 @end deftypefun
 
-@deftypefun void mpz_fac_ui (mpz_t @var{rop}, unsigned long int @var{op})
+@deftypefun void mpz_fac_ui (mpz_t @var{rop}, unsigned long int @var{n})
+@deftypefunx void mpz_2fac_ui (mpz_t @var{rop}, unsigned long int @var{n})
+@deftypefunx void mpz_mfac_uiui (mpz_t @var{rop}, unsigned long int @var{n}, unsigned long int @var{m})
 @cindex Factorial functions
-Set @var{rop} to @var{op}!, the factorial of @var{op}.
+Set @var{rop} to the factorial of @var{n}: @code{mpz_fac_ui} computes the plain factorial @var{n}!,
+@code{mpz_2fac_ui} computes the double-factorial @var{n}!!, and @code{mpz_mfac_uiui} the
+@var{m}-multi-factorial @m{n!^{(m)}, @var{n}!^(@var{m})}.
+@end deftypefun
+
+@deftypefun void mpz_primorial_ui (mpz_t @var{rop}, unsigned long int @var{n})
+@cindex Primorial functions
+Set @var{rop} to the primorial of @var{n}, i.e. the product of all positive
+prime numbers smaller then or equal to @var{n}.
 @end deftypefun
 
 @deftypefun void mpz_bin_ui (mpz_t @var{rop}, mpz_t @var{n}, unsigned long int @var{k})
@@ -4405,7 +4394,7 @@ Return @math{+1} if @math{@var{op} > 0}, 0 if @math{@var{op} = 0}, and
 @math{-1} if @math{@var{op} < 0}.
 
 This function is actually implemented as a macro.  It evaluates its
-arguments multiple times.
+argument multiple times.
 @end deftypefn
 
 @deftypefun int mpq_equal (mpq_t @var{op1}, mpq_t @var{op2})
@@ -4946,7 +4935,7 @@ result in @var{rop}.  This is @math{@GMPabs{@var{op1}-@var{op2}}/@var{op1}}.
 Return @math{+1} if @math{@var{op} > 0}, 0 if @math{@var{op} = 0}, and
 @math{-1} if @math{@var{op} < 0}.
 
-This function is actually implemented as a macro.  It evaluates its arguments
+This function is actually implemented as a macro.  It evaluates its argument
 multiple times.
 @end deftypefn
 
@@ -5195,7 +5184,7 @@ This function requires that @var{s1n} is greater than or equal to
 @var{s2n}.
 @end deftypefun
 
-@deftypefun void mpn_neg (mp_limb_t *@var{rp}, const mp_limb_t *@var{sp}, mp_size_t @var{n})
+@deftypefun mp_limb_t mpn_neg (mp_limb_t *@var{rp}, const mp_limb_t *@var{sp}, mp_size_t @var{n})
 Perform the negation of @{@var{sp}, @var{n}@}, and write the result to
 @{@var{rp}, @var{n}@}.  Return carry-out.
 @end deftypefun
@@ -5393,10 +5382,9 @@ Set @{@var{rp}, @var{retval}@} to the greatest common divisor of @{@var{xp},
 the return value is the actual number produced.  Both source operands are
 destroyed.
 
-@{@var{xp}, @var{xn}@} must have at least as many bits as @{@var{yp},
-@var{yn}@}.  @{@var{yp}, @var{yn}@} must be odd.  Both operands must have
-non-zero most significant limbs.  No overlap is permitted between @{@var{xp},
-@var{xn}@} and @{@var{yp}, @var{yn}@}.
+It is required that @math{@var{xn} @ge @var{yn} > 0}, and the most significant
+limb of @{@var{yp}, @var{yn}@} must be non-zero.  No overlap is permitted
+between @{@var{xp}, @var{xn}@} and @{@var{yp}, @var{yn}@}.
 @end deftypefun
 
 @deftypefun mp_limb_t mpn_gcd_1 (const mp_limb_t *@var{xp}, mp_size_t @var{xn}, mp_limb_t @var{ylimb})
@@ -6404,7 +6392,7 @@ results.  For classes with overloading, see @ref{C++ Class Interface}.
 
 
 
-@node C++ Class Interface, BSD Compatible Functions, Formatted Input, Top
+@node C++ Class Interface, Custom Allocation, Formatted Input, Top
 @chapter C++ Class Interface
 @cindex C++ interface
 
@@ -6542,8 +6530,10 @@ anything.
 @deftypefun {} mpz_class::mpz_class (type @var{n})
 Construct an @code{mpz_class}.  All the standard C++ types may be used, except
 @code{long long} and @code{long double}, and all the GMP C++ classes can be
-used.  Any necessary conversion follows the corresponding C function, for
-example @code{double} follows @code{mpz_set_d} (@pxref{Assigning Integers}).
+used, although conversions from @code{mpq_class} and @code{mpf_class} are
+@code{explicit}.  Any necessary conversion follows the corresponding C
+function, for example @code{double} follows @code{mpz_set_d}
+(@pxref{Assigning Integers}).
 @end deftypefun
 
 @deftypefun explicit mpz_class::mpz_class (mpz_t @var{z})
@@ -6559,6 +6549,11 @@ Construct an @code{mpz_class} converted from a string using @code{mpz_set_str}
 
 If the string is not a valid integer, an @code{std::invalid_argument}
 exception is thrown.  The same applies to @code{operator=}.
+@end deftypefun
+
+@deftypefun mpz_class operator"" _mpz (const char *@var{str})
+With C++11 compilers, integers can be constructed with the syntax
+@code{123_mpz} which is equivalent to @code{mpz_class("123")}.
 @end deftypefun
 
 @deftypefun mpz_class operator/ (mpz_class @var{a}, mpz_class @var{d})
@@ -6577,7 +6572,7 @@ mpz_fdiv_q (q.get_mpz_t(), a.get_mpz_t(), d.get_mpz_t());
 @end example
 @end deftypefun
 
-@deftypefun mpz_class abs (mpz_class @var{op1})
+@deftypefun mpz_class abs (mpz_class @var{op})
 @deftypefunx int cmp (mpz_class @var{op1}, type @var{op2})
 @deftypefunx int cmp (type @var{op1}, mpz_class @var{op2})
 @maybepagebreak
@@ -6598,6 +6593,9 @@ mpz_fdiv_q (q.get_mpz_t(), a.get_mpz_t(), d.get_mpz_t());
 @deftypefunx int mpz_class::set_str (const string& @var{str}, int @var{base})
 @deftypefunx int sgn (mpz_class @var{op})
 @deftypefunx mpz_class sqrt (mpz_class @var{op})
+@maybepagebreak
+@deftypefunx void mpz_class::swap (mpz_class& @var{op})
+@deftypefunx void swap (mpz_class& @var{op1}, mpz_class& @var{op2})
 These functions provide a C++ class interface to the corresponding GMP C
 routines.
 
@@ -6626,9 +6624,10 @@ canonical form, or if not then @code{mpq_class::canonicalize} called.
 @deftypefun {} mpq_class::mpq_class (type @var{op})
 @deftypefunx {} mpq_class::mpq_class (integer @var{num}, integer @var{den})
 Construct an @code{mpq_class}.  The initial value can be a single value of any
-type, or a pair of integers (@code{mpz_class} or standard C++ integer types)
-representing a fraction, except that @code{long long} and @code{long double}
-are not supported.  For example,
+type (conversion from @code{mpf_class} is @code{explicit}), or a pair of
+integers (@code{mpz_class} or standard C++ integer types) representing a
+fraction, except that @code{long long} and @code{long double} are not
+supported.  For example,
 
 @example
 mpq_class q (99);
@@ -6652,6 +6651,12 @@ If the string is not a valid rational, an @code{std::invalid_argument}
 exception is thrown.  The same applies to @code{operator=}.
 @end deftypefun
 
+@deftypefun mpq_class operator"" _mpq (const char *@var{str})
+With C++11 compilers, integral rationals can be constructed with the syntax
+@code{123_mpq} which is equivalent to @code{mpq_class(123_mpz)}. Other
+rationals can be built as @code{-1_mpq/2} or @code{0xb_mpq/123456_mpz}.
+@end deftypefun
+
 @deftypefun void mpq_class::canonicalize ()
 Put an @code{mpq_class} into canonical form, as per @ref{Rational Number
 Functions}.  All arithmetic operators require their operands in canonical
@@ -6668,6 +6673,9 @@ form, and will return results in canonical form.
 @deftypefunx int mpq_class::set_str (const char *@var{str}, int @var{base})
 @deftypefunx int mpq_class::set_str (const string& @var{str}, int @var{base})
 @deftypefunx int sgn (mpq_class @var{op})
+@maybepagebreak
+@deftypefunx void mpq_class::swap (mpq_class& @var{op})
+@deftypefunx void swap (mpq_class& @var{op1}, mpq_class& @var{op2})
 These functions provide a C++ class interface to the corresponding GMP C
 routines.
 
@@ -6760,6 +6768,11 @@ If the string is not a valid float, an @code{std::invalid_argument} exception
 is thrown.  The same applies to @code{operator=}.
 @end deftypefun
 
+@deftypefun mpf_class operator"" _mpf (const char *@var{str})
+With C++11 compilers, floats can be constructed with the syntax
+@code{1.23e-1_mpf} which is equivalent to @code{mpf_class("1.23e-1")}.
+@end deftypefun
+
 @deftypefun {mpf_class&} mpf_class::operator= (type @var{op})
 Convert and store the given @var{op} value to an @code{mpf_class} object.  The
 same types are accepted as for the constructors above.
@@ -6810,6 +6823,9 @@ with the builtin float types.
 @deftypefunx int mpf_class::set_str (const string& @var{str}, int @var{base})
 @deftypefunx int sgn (mpf_class @var{op})
 @deftypefunx mpf_class sqrt (mpf_class @var{op})
+@maybepagebreak
+@deftypefunx void mpf_class::swap (mpf_class& @var{op})
+@deftypefunx void swap (mpf_class& @var{op1}, mpf_class& @var{op2})
 @deftypefunx mpf_class trunc (mpf_class @var{op})
 These functions provide a C++ class interface to the corresponding GMP C
 routines.
@@ -6871,7 +6887,7 @@ Seed a random number generator.  See @pxref{Random Number Functions}, for how
 to choose a good seed.
 @end deftypefun
 
-@deftypefun mpz_class gmp_randclass::get_z_bits (unsigned long @var{bits})
+@deftypefun mpz_class gmp_randclass::get_z_bits (mp_bitcnt_t @var{bits})
 @deftypefunx mpz_class gmp_randclass::get_z_bits (mpz_class @var{bits})
 Generate a random integer with a specified number of bits.
 @end deftypefun
@@ -6981,131 +6997,7 @@ void fun (T f, T g)
 @end table
 
 
-@node BSD Compatible Functions, Custom Allocation, C++ Class Interface, Top
-@comment  node-name,  next,  previous,  up
-@chapter Berkeley MP Compatible Functions
-@cindex Berkeley MP compatible functions
-@cindex BSD MP compatible functions
-
-These functions are intended to be fully compatible with the Berkeley MP
-library which is available on many BSD derived U*ix systems.  The
-@samp{--enable-mpbsd} option must be used when building GNU MP to make these
-available (@pxref{Installing GMP}).
-
-The original Berkeley MP library has a usage restriction: you cannot use the
-same variable as both source and destination in a single function call.  The
-compatible functions in GNU MP do not share this restriction---inputs and
-outputs may overlap.
-
-It is not recommended that new programs are written using these functions.
-Apart from the incomplete set of functions, the interface for initializing
-@code{MINT} objects is more error prone, and the @code{pow} function collides
-with @code{pow} in @file{libm.a}.
-
-@cindex @code{mp.h}
-@tindex MINT
-Include the header @file{mp.h} to get the definition of the necessary types and
-functions.  If you are on a BSD derived system, make sure to include GNU
-@file{mp.h} if you are going to link the GNU @file{libmp.a} to your program.
-This means that you probably need to give the @samp{-I<dir>} option to the
-compiler, where @samp{<dir>} is the directory where you have GNU @file{mp.h}.
-
-@deftypefun {MINT *} itom (signed short int @var{initial_value})
-Allocate an integer consisting of a @code{MINT} object and dynamic limb space.
-Initialize the integer to @var{initial_value}.  Return a pointer to the
-@code{MINT} object.
-@end deftypefun
-
-@deftypefun {MINT *} xtom (char *@var{initial_value})
-Allocate an integer consisting of a @code{MINT} object and dynamic limb space.
-Initialize the integer from @var{initial_value}, a hexadecimal,
-null-terminated C string.  Return a pointer to the @code{MINT} object.
-@end deftypefun
-
-@deftypefun void move (MINT *@var{src}, MINT *@var{dest})
-Set @var{dest} to @var{src} by copying.  Both variables must be previously
-initialized.
-@end deftypefun
-
-@deftypefun void madd (MINT *@var{src_1}, MINT *@var{src_2}, MINT *@var{destination})
-Add @var{src_1} and @var{src_2} and put the sum in @var{destination}.
-@end deftypefun
-
-@deftypefun void msub (MINT *@var{src_1}, MINT *@var{src_2}, MINT *@var{destination})
-Subtract @var{src_2} from @var{src_1} and put the difference in
-@var{destination}.
-@end deftypefun
-
-@deftypefun void mult (MINT *@var{src_1}, MINT *@var{src_2}, MINT *@var{destination})
-Multiply @var{src_1} and @var{src_2} and put the product in @var{destination}.
-@end deftypefun
-
-@deftypefun void mdiv (MINT *@var{dividend}, MINT *@var{divisor}, MINT *@var{quotient}, MINT *@var{remainder})
-@deftypefunx void sdiv (MINT *@var{dividend}, signed short int @var{divisor}, MINT *@var{quotient}, signed short int *@var{remainder})
-Set @var{quotient} to @var{dividend}/@var{divisor}, and @var{remainder} to
-@var{dividend} mod @var{divisor}.  The quotient is rounded towards zero; the
-remainder has the same sign as the dividend unless it is zero.
-
-Some implementations of these functions work differently---or not at all---for
-negative arguments.
-@end deftypefun
-
-@deftypefun void msqrt (MINT *@var{op}, MINT *@var{root}, MINT *@var{remainder})
-Set @var{root} to @m{\lfloor\sqrt{@var{op}}\rfloor, the truncated integer part
-of the square root of @var{op}}, like @code{mpz_sqrt}.  Set @var{remainder} to
-@m{(@var{op} - @var{root}^2), @var{op}@minus{}@var{root}*@var{root}}, i.e.
-zero if @var{op} is a perfect square.
-
-If @var{root} and @var{remainder} are the same variable, the results are
-undefined.
-@end deftypefun
-
-@deftypefun void pow (MINT *@var{base}, MINT *@var{exp}, MINT *@var{mod}, MINT *@var{dest})
-Set @var{dest} to (@var{base} raised to @var{exp}) modulo @var{mod}.
-
-Note that the name @code{pow} clashes with @code{pow} from the standard C math
-library (@pxref{Exponents and Logarithms,, Exponentiation and Logarithms,
-libc, The GNU C Library Reference Manual}).  An application will only be able
-to use one or the other.
-@end deftypefun
-
-@deftypefun void rpow (MINT *@var{base}, signed short int @var{exp}, MINT *@var{dest})
-Set @var{dest} to @var{base} raised to @var{exp}.
-@end deftypefun
-
-@deftypefun void gcd (MINT *@var{op1}, MINT *@var{op2}, MINT *@var{res})
-Set @var{res} to the greatest common divisor of @var{op1} and @var{op2}.
-@end deftypefun
-
-@deftypefun int mcmp (MINT *@var{op1}, MINT *@var{op2})
-Compare @var{op1} and @var{op2}.  Return a positive value if @var{op1} >
-@var{op2}, zero if @var{op1} = @var{op2}, and a negative value if @var{op1} <
-@var{op2}.
-@end deftypefun
-
-@deftypefun void min (MINT *@var{dest})
-Input a decimal string from @code{stdin}, and put the read integer in
-@var{dest}.  SPC and TAB are allowed in the number string, and are ignored.
-@end deftypefun
-
-@deftypefun void mout (MINT *@var{src})
-Output @var{src} to @code{stdout}, as a decimal string.  Also output a newline.
-@end deftypefun
-
-@deftypefun {char *} mtox (MINT *@var{op})
-Convert @var{op} to a hexadecimal string, and return a pointer to the string.
-The returned string is allocated using the default memory allocation function,
-@code{malloc} by default.  It will be @code{strlen(str)+1} bytes, that being
-exactly enough for the string and null-terminator.
-@end deftypefun
-
-@deftypefun void mfree (MINT *@var{op})
-De-allocate, the space used by @var{op}.  @strong{This function should only be
-passed a value returned by @code{itom} or @code{xtom}.}
-@end deftypefun
-
-
-@node Custom Allocation, Language Bindings, BSD Compatible Functions, Top
+@node Custom Allocation, Language Bindings, C++ Class Interface, Top
 @comment  node-name,  next,  previous,  up
 @chapter Custom Allocation
 @cindex Custom allocation
@@ -7118,9 +7010,6 @@ and terminates the program.
 
 Alternate functions can be specified, to allocate memory in a different way or
 to have a different error action on running out of memory.
-
-This feature is available in the Berkeley compatibility library (@pxref{BSD
-Compatible Functions}) as well as the main GMP library.
 
 @deftypefun void mp_set_memory_functions (@* void *(*@var{alloc_func_ptr}) (size_t), @* void *(*@var{realloc_func_ptr}) (void *, size_t, size_t), @* void (*@var{free_func_ptr}) (void *, size_t))
 Replace the current allocation functions from the arguments.  If an argument
@@ -8458,9 +8347,10 @@ products must be done as a normal division, but there's still some single limb
 divisions saved.  When @math{d} is a single limb some simplifications arise,
 providing good speedups on a number of processors.
 
-@code{mpn_divexact_by3}, @code{mpn_modexact_1_odd} and the @code{mpn_redc_X}
-functions differ subtly in how they return @math{r}, leading to some negations
-in the above formula, but all are essentially the same.
+The functions @code{mpn_divexact_by3}, @code{mpn_modexact_1_odd} and the
+internal @code{mpn_redc_X} functions differ subtly in how they return @math{r},
+leading to some negations in the above formula, but all are essentially the
+same.
 
 @cindex Divisibility algorithm
 @cindex Congruence algorithm
@@ -9125,41 +9015,74 @@ for an arbitrary @math{n}.
 @subsection Factorial
 @cindex Factorial algorithm
 
-Factorials are calculated by a combination of removal of twos, powering, and
-binary splitting.  The procedure can be best illustrated with an example,
+Factorials are calculated by a combination of two algorithms. An idea is
+shared among them: to compute the odd part of the factorial; a final step
+takes account of the power of @math{2} term, by shifting.
+
+For small @math{n}, the odd factor of @math{n!} is computed with the simple
+observation that it is equal to the product of all positive odd numbers
+smaller than @math{n} times the odd factor of @m{\lfloor n/2\rfloor!, [n/2]!},
+where @m{\lfloor x\rfloor, [x]} is the integer part of @math{x}, and so on
+recursively. The procedure can be best illustrated with an example,
 
 @quotation
-@math{23! = 1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.17.18.19.20.21.22.23}
+@math{23! = (23.21.19.17.15.13.11.9.7.5.3)(11.9.7.5.3)(5.3)2^{19}}
 @end quotation
 
-@noindent
-has factors of two removed,
+Current code collects all the factors in a single list, with a loop and no
+recursion, and compute the product, with no special care for repeated chunks.
 
-@quotation
-@math{23! = 2^{19}.1.1.3.1.5.3.7.1.9.5.11.3.13.7.15.1.17.9.19.5.21.11.23}
-@end quotation
+When @math{n} is larger, computation pass trough prime sieving. An helper
+function is used, as suggested by Peter Luschny:
+@tex
+$$\mathop{\rm msf}(n) = {n!\over\lfloor n/2\rfloor!^2\cdot2^k} = \prod_{p=3}^{n}
+p^{\mathop{\rm L}(p,n)} $$
+@end tex
+@ifnottex
 
-@noindent
-and the resulting terms collected up according to their multiplicity,
+@example
+                            n
+                          -----
+               n!          | |   L(p,n)
+msf(n) = -------------- =  | |  p
+          [n/2]!^2.2^k     p=3
+@end example
+@end ifnottex
 
-@quotation
-@math{23! = 2^{19}.(3.5)^3.(7.9.11)^2.(13.15.17.19.21.23)}
-@end quotation
+Where @math{p} ranges on odd prime numbers. The exponent @math{k} is chosen to
+obtain an odd integer number: @math{k} is the number of 1 bits in the binary
+representation of @m{\lfloor n/2\rfloor, [n/2]}. The function L@math{(p,n)}
+can be defined as zero when @math{p} is composite, and, for any prime
+@math{p}, it is computed with:
+@tex
+$$\mathop{\rm L}(p,n) = \sum_{i>0}\left\lfloor{n\over p^i}\right\rfloor\bmod2
+\leq\log_p(n)$$
+@end tex
+@ifnottex
 
-Each sequence such as @math{13.15.17.19.21.23} is evaluated by splitting into
-every second term, as for instance @math{(13.17.21).(15.19.23)}, and the same
-recursively on each half.  This is implemented iteratively using some bit
-twiddling.
+@example
+          ---
+           \    n
+L(p,n) =   /  [---] mod 2   <=  log (n) .
+          ---  p^i                p
+          i>0
+@end example
+@end ifnottex
+
+With this helper function, we are able to compute the odd part of @math{n!}
+using the recursion implied by @m{n!=\lfloor n/2\rfloor!^2\cdot\mathop{\rm
+msf}(n)\cdot2^k , n!=[n/2]!^2*msf(n)*2^k}. The recursion stops using the
+small-@math{n} algorithm on some @m{\lfloor n/2^i\rfloor, [n/2^i]}.
+
+Both the above algorithms use binary splitting to compute the product of many
+small factors. At first as many products as possible are accumulated in a
+single register, generating a list of factors that fit in a machine word. This
+list is then split into halves, and the product is computed recursively.
 
 Such splitting is more efficient than repeated N@cross{}1 multiplies since it
 forms big multiplies, allowing Karatsuba and higher algorithms to be used.
 And even below the Karatsuba threshold a big block of work can be more
 efficient for the basecase algorithm.
-
-Splitting into subsequences of every second term keeps the resulting products
-more nearly equal in size than would the simpler approach of say taking the
-first half and second half of the sequence.  Nearly equal products are more
-efficient for the current multiply implementation.
 
 
 @node Binomial Coefficients Algorithm, Fibonacci Numbers Algorithm, Factorial Algorithm, Other Algorithms
@@ -10446,11 +10369,12 @@ Jason Moxham rewrote @code{mpz_fac_ui}.
 Pedro Gimeno implemented the Mersenne Twister and made other random number
 improvements.
 
-Niels M@"oller wrote the sub-quadratic GCD and extended GCD code, the
+Niels M@"oller wrote the sub-quadratic GCD, extended GCD and jacobi code, the
 quadratic Hensel division code, and (with Torbj@"orn) the new divide and
 conquer division code for GMP 4.3.  Niels also helped implement the new Toom
 multiply code for GMP 4.3 and implemented helper functions to simplify Toom
-evaluations for GMP 5.0.  He wrote the original version of mpn_mulmod_bnm1.
+evaluations for GMP 5.0.  He wrote the original version of mpn_mulmod_bnm1, and
+he is the main author of the mini-gmp package used for gmp bootstrapping.
 
 Alberto Zanoni and Marco Bodrato suggested the unbalanced multiply strategy,
 and found the optimal strategies for evaluation and interpolation in Toom
@@ -10459,13 +10383,25 @@ multiplication.
 Marco Bodrato helped implement the new Toom multiply code for GMP 4.3 and
 implemented most of the new Toom multiply and squaring code for 5.0.
 He is the main author of the current mpn_mulmod_bnm1 and mpn_mullo_n.  Marco
-also wrote the functions mpn_invert and mpn_invertappr.
+also wrote the functions mpn_invert and mpn_invertappr.  He is the author of
+the current combinatorial functions: binomial, factorial, multifactorial,
+primorial.
 
 David Harvey suggested the internal function @code{mpn_bdiv_dbm1}, implementing
 division relevant to Toom multiplication.  He also worked on fast assembly
-sequences, in particular on a fast AMD64 @code{mpn_mul_basecase}.
+sequences, in particular on a fast AMD64 @code{mpn_mul_basecase}. He wrote
+the internal middle product functions @code{mpn_mulmid_basecase},
+@code{mpn_toom42_mulmid}, @code{mpn_mulmid_n} and related helper routines.
 
 Martin Boij wrote @code{mpn_perfect_power_p}.
+
+Marc Glisse improved @file{gmpxx.h}: use fewer temporaries (faster),
+specializations of @code{numeric_limits} and @code{common_type}, C++11
+features (move constructors, explicit bool conversion, UDL), make the
+conversion from @code{mpq_class} to @code{mpz_class} explicit, optimize
+operations where one argument is a small compile-time constant, replace
+some heap allocations by stack allocations.  He also fixed the eofbit
+handling of C++ streams, and removed one division from @file{mpq/aors.c}.
 
 (This list is chronological, not ordered after significance.  If you have
 contributed to GMP but are not listed above, please tell

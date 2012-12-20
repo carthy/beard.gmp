@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.5.1.  */
 
 /* Bison implementation for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2012 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "2.5"
+#define YYBISON_VERSION "2.5.1"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -211,6 +211,14 @@ mpz_t  variable[26];
 /* Line 268 of yacc.c  */
 #line 213 "calc.c"
 
+# ifndef YY_NULL
+#  if defined __cplusplus && 201103L <= __cplusplus
+#   define YY_NULL nullptr
+#  else
+#   define YY_NULL 0
+#  endif
+# endif
+
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -303,7 +311,7 @@ mpz_t  variable[26];
 typedef union YYSTYPE
 {
 
-/* Line 293 of yacc.c  */
+/* Line 295 of yacc.c  */
 #line 142 "calc.y"
 
   char  *str;
@@ -311,8 +319,8 @@ typedef union YYSTYPE
 
 
 
-/* Line 293 of yacc.c  */
-#line 316 "calc.c"
+/* Line 295 of yacc.c  */
+#line 324 "calc.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -323,8 +331,8 @@ typedef union YYSTYPE
 /* Copy the second part of user declarations.  */
 
 
-/* Line 343 of yacc.c  */
-#line 328 "calc.c"
+/* Line 345 of yacc.c  */
+#line 336 "calc.c"
 
 #ifdef short
 # undef short
@@ -430,6 +438,7 @@ YYID (yyi)
 #    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS && (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 #     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+      /* Use EXIT_SUCCESS as a witness for stdlib.h.  */
 #     ifndef EXIT_SUCCESS
 #      define EXIT_SUCCESS 0
 #     endif
@@ -521,20 +530,20 @@ union yyalloc
 #endif
 
 #if defined YYCOPY_NEEDED && YYCOPY_NEEDED
-/* Copy COUNT objects from FROM to TO.  The source and destination do
+/* Copy COUNT objects from SRC to DST.  The source and destination do
    not overlap.  */
 # ifndef YYCOPY
 #  if defined __GNUC__ && 1 < __GNUC__
-#   define YYCOPY(To, From, Count) \
-      __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
+#   define YYCOPY(Dst, Src, Count) \
+      __builtin_memcpy (Dst, Src, (Count) * sizeof (*(Src)))
 #  else
-#   define YYCOPY(To, From, Count)		\
-      do					\
-	{					\
-	  YYSIZE_T yyi;				\
-	  for (yyi = 0; yyi < (Count); yyi++)	\
-	    (To)[yyi] = (From)[yyi];		\
-	}					\
+#   define YYCOPY(Dst, Src, Count)              \
+      do                                        \
+        {                                       \
+          YYSIZE_T yyi;                         \
+          for (yyi = 0; yyi < (Count); yyi++)   \
+            (Dst)[yyi] = (Src)[yyi];            \
+        }                                       \
       while (YYID (0))
 #  endif
 # endif
@@ -652,7 +661,7 @@ static const char *const yytname[] =
   "POWM", "ROOT", "SQRT", "NUMBER", "VARIABLE", "LOR", "LAND", "'<'",
   "'>'", "GE", "LE", "NE", "EQ", "RSHIFT", "LSHIFT", "'+'", "'-'", "'*'",
   "'/'", "'%'", "UMINUS", "'^'", "'!'", "'='", "'('", "')'", "','",
-  "$accept", "top", "statements", "statement", "e", "gcdlist", "lcmlist", 0
+  "$accept", "top", "statements", "statement", "e", "gcdlist", "lcmlist", YY_NULL
 };
 #endif
 
@@ -914,17 +923,18 @@ static const yytype_uint8 yystos[] =
 
 #define YYRECOVERING()  (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)					\
-do								\
-  if (yychar == YYEMPTY && yylen == 1)				\
-    {								\
-      yychar = (Token);						\
-      yylval = (Value);						\
-      YYPOPSTACK (1);						\
-      goto yybackup;						\
-    }								\
-  else								\
-    {								\
+#define YYBACKUP(Token, Value)                                  \
+do                                                              \
+  if (yychar == YYEMPTY)                                        \
+    {                                                           \
+      yychar = (Token);                                         \
+      yylval = (Value);                                         \
+      YYPOPSTACK (yylen);                                       \
+      yystate = *yyssp;                                         \
+      goto yybackup;                                            \
+    }                                                           \
+  else                                                          \
+    {                                                           \
       yyerror (YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
@@ -1019,6 +1029,8 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep)
     YYSTYPE const * const yyvaluep;
 #endif
 {
+  FILE *yyo = yyoutput;
+  YYUSE (yyo);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
@@ -1270,12 +1282,12 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (0, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   YYSIZE_T yysize1;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = 0;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -1335,7 +1347,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                     break;
                   }
                 yyarg[yycount++] = yytname[yyx];
-                yysize1 = yysize + yytnamerr (0, yytname[yyx]);
+                yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                 if (! (yysize <= yysize1
                        && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                   return 2;
@@ -1487,7 +1499,7 @@ yyparse ()
        `yyss': related to states.
        `yyvs': related to semantic values.
 
-       Refer to the stacks thru separate pointers, to allow yyoverflow
+       Refer to the stacks through separate pointers, to allow yyoverflow
        to reallocate them elsewhere.  */
 
     /* The state stack.  */
@@ -1720,14 +1732,14 @@ yyreduce:
     {
         case 6:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 173 "calc.y"
     { sp = stack[0]; yyerrok; }
     break;
 
   case 8:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 177 "calc.y"
     {
       mpz_out_str (stdout, obase, sp); putchar ('\n');
@@ -1738,7 +1750,7 @@ yyreduce:
 
   case 9:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 182 "calc.y"
     {
       CHECK_VARIABLE ((yyvsp[(1) - (3)].var));
@@ -1750,70 +1762,70 @@ yyreduce:
 
   case 10:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 188 "calc.y"
     { calc_help (); }
     break;
 
   case 11:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 189 "calc.y"
     { ibase = 16; obase = -16; }
     break;
 
   case 12:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 190 "calc.y"
     { ibase = 0;  obase = 10; }
     break;
 
   case 13:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 191 "calc.y"
     { exit (0); }
     break;
 
   case 15:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 198 "calc.y"
     { sp--; mpz_add    (sp, sp, sp+1); }
     break;
 
   case 16:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 199 "calc.y"
     { sp--; mpz_sub    (sp, sp, sp+1); }
     break;
 
   case 17:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 200 "calc.y"
     { sp--; mpz_mul    (sp, sp, sp+1); }
     break;
 
   case 18:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 201 "calc.y"
     { sp--; mpz_fdiv_q (sp, sp, sp+1); }
     break;
 
   case 19:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 202 "calc.y"
     { sp--; mpz_fdiv_r (sp, sp, sp+1); }
     break;
 
   case 20:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 203 "calc.y"
     { CHECK_UI ("Exponent", sp);
                     sp--; mpz_pow_ui (sp, sp, mpz_get_ui (sp+1)); }
@@ -1821,7 +1833,7 @@ yyreduce:
 
   case 21:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 205 "calc.y"
     { CHECK_UI ("Shift count", sp);
                     sp--; mpz_mul_2exp (sp, sp, mpz_get_ui (sp+1)); }
@@ -1829,7 +1841,7 @@ yyreduce:
 
   case 22:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 207 "calc.y"
     { CHECK_UI ("Shift count", sp);
                     sp--; mpz_fdiv_q_2exp (sp, sp, mpz_get_ui (sp+1)); }
@@ -1837,7 +1849,7 @@ yyreduce:
 
   case 23:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 209 "calc.y"
     { CHECK_UI ("Factorial", sp);
                     mpz_fac_ui (sp, mpz_get_ui (sp)); }
@@ -1845,77 +1857,77 @@ yyreduce:
 
   case 24:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 211 "calc.y"
     { mpz_neg (sp, sp); }
     break;
 
   case 25:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 213 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) <  0); }
     break;
 
   case 26:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 214 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) <= 0); }
     break;
 
   case 27:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 215 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) == 0); }
     break;
 
   case 28:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 216 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) != 0); }
     break;
 
   case 29:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 217 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) >= 0); }
     break;
 
   case 30:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 218 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) >  0); }
     break;
 
   case 31:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 220 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_sgn (sp) && mpz_sgn (sp+1)); }
     break;
 
   case 32:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 221 "calc.y"
     { sp--; mpz_set_ui (sp, mpz_sgn (sp) || mpz_sgn (sp+1)); }
     break;
 
   case 33:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 223 "calc.y"
     { mpz_abs (sp, sp); }
     break;
 
   case 34:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 224 "calc.y"
     { sp--; CHECK_UI ("Binomial base", sp+1);
                                    mpz_bin_ui (sp, sp, mpz_get_ui (sp+1)); }
@@ -1923,7 +1935,7 @@ yyreduce:
 
   case 35:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 226 "calc.y"
     { CHECK_UI ("Fibonacci", sp);
                                    mpz_fib_ui (sp, mpz_get_ui (sp)); }
@@ -1931,7 +1943,7 @@ yyreduce:
 
   case 37:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 229 "calc.y"
     { sp--; mpz_set_si (sp,
                                          mpz_kronecker (sp, sp+1)); }
@@ -1939,7 +1951,7 @@ yyreduce:
 
   case 39:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 232 "calc.y"
     { CHECK_UI ("Lucas number", sp);
                                    mpz_lucnum_ui (sp, mpz_get_ui (sp)); }
@@ -1947,21 +1959,21 @@ yyreduce:
 
   case 40:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 234 "calc.y"
     { mpz_nextprime (sp, sp); }
     break;
 
   case 41:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 235 "calc.y"
     { sp -= 2; mpz_powm (sp, sp, sp+1, sp+2); }
     break;
 
   case 42:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 236 "calc.y"
     { sp--; CHECK_UI ("Nth-root", sp+1);
                                    mpz_root (sp, sp, mpz_get_ui (sp+1)); }
@@ -1969,14 +1981,14 @@ yyreduce:
 
   case 43:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 238 "calc.y"
     { mpz_sqrt (sp, sp); }
     break;
 
   case 44:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 240 "calc.y"
     {
         sp++;
@@ -1988,7 +2000,7 @@ yyreduce:
 
   case 45:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 246 "calc.y"
     {
         sp++;
@@ -2003,22 +2015,22 @@ yyreduce:
 
   case 47:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 258 "calc.y"
     { sp--; mpz_gcd (sp, sp, sp+1); }
     break;
 
   case 49:
 
-/* Line 1806 of yacc.c  */
+/* Line 1810 of yacc.c  */
 #line 262 "calc.y"
     { sp--; mpz_lcm (sp, sp, sp+1); }
     break;
 
 
 
-/* Line 1806 of yacc.c  */
-#line 2022 "calc.c"
+/* Line 1810 of yacc.c  */
+#line 2034 "calc.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2205,7 +2217,7 @@ yyabortlab:
   yyresult = 1;
   goto yyreturn;
 
-#if !defined(yyoverflow) || YYERROR_VERBOSE
+#if !defined yyoverflow || YYERROR_VERBOSE
 /*-------------------------------------------------.
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
@@ -2248,7 +2260,7 @@ yyreturn:
 
 
 
-/* Line 2067 of yacc.c  */
+/* Line 2071 of yacc.c  */
 #line 264 "calc.y"
 
 

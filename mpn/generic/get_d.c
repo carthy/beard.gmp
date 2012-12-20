@@ -4,7 +4,7 @@
    CERTAIN TO BE SUBJECT TO INCOMPATIBLE CHANGES OR DISAPPEAR COMPLETELY IN
    FUTURE GNU MP RELEASES.
 
-Copyright 2003, 2004, 2007, 2009 Free Software Foundation, Inc.
+Copyright 2003, 2004, 2007, 2009, 2010, 2012 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -133,6 +133,10 @@ static volatile const long CONST_NEG_1022_SUB_53 = -1022 - 53;
 double
 mpn_get_d (mp_srcptr up, mp_size_t size, mp_size_t sign, long exp)
 {
+  int lshift, nbits;
+  union ieee_double_extract u;
+  mp_limb_t x, mhi, mlo;
+
   ASSERT (size >= 0);
   ASSERT_MPN (up, size);
   ASSERT (size == 0 || up[size-1] != 0);
@@ -157,253 +161,7 @@ mpn_get_d (mp_srcptr up, mp_size_t size, mp_size_t sign, long exp)
       exp += GMP_NUMB_BITS * size;
     }
 
-
-#if 1
-{
-  int lshift, nbits;
-  union ieee_double_extract u;
-  mp_limb_t x, mhi, mlo;
-#if GMP_LIMB_BITS == 64
-  mp_limb_t m;
-  up += size;
-  m = *--up;
-  count_leading_zeros (lshift, m);
-
-  exp -= (lshift - GMP_NAIL_BITS) + 1;
-  m <<= lshift;
-
-  nbits = GMP_LIMB_BITS - lshift;
-
-  if (nbits < 53 && size > 1)
-    {
-      x = *--up;
-      x <<= GMP_NAIL_BITS;
-      x >>= nbits;
-      m |= x;
-      nbits += GMP_NUMB_BITS;
-
-      if (LIMBS_PER_DOUBLE >= 3 && nbits < 53 && size > 2)
-	{
-	  x = *--up;
-	  x <<= GMP_NAIL_BITS;
-	  x >>= nbits;
-	  m |= x;
-	  nbits += GMP_NUMB_BITS;
-	}
-    }
-  mhi = m >> (32 + 11);
-  mlo = m >> 11;
-#endif
-#if GMP_LIMB_BITS == 32
-  up += size;
-  x = *--up, size--;
-  count_leading_zeros (lshift, x);
-
-  exp -= (lshift - GMP_NAIL_BITS) + 1;
-  x <<= lshift;
-  mhi = x >> 11;
-
-  if (lshift < 11)		/* FIXME: never true if NUMB < 20 bits */
-    {
-      /* All 20 bits in mhi */
-      mlo = x << 21;
-      /* >= 1 bit in mlo */
-      nbits = GMP_LIMB_BITS - lshift - 21;
-    }
-  else
-    {
-      if (size != 0)
-	{
-	  nbits = GMP_LIMB_BITS - lshift;
-
-	  x = *--up, size--;
-	  x <<= GMP_NAIL_BITS;
-	  mhi |= x >> nbits >> 11;
-
-	  mlo = x << GMP_LIMB_BITS - nbits - 11;
-	  nbits = nbits + 11 - GMP_NAIL_BITS;
-	}
-      else
-	{
-	  mlo = 0;
-	  goto done;
-	}
-    }
-
-  if (LIMBS_PER_DOUBLE >= 2 && nbits < 32 && size != 0)
-    {
-      x = *--up, size--;
-      x <<= GMP_NAIL_BITS;
-      x >>= nbits;
-      mlo |= x;
-      nbits += GMP_NUMB_BITS;
-
-      if (LIMBS_PER_DOUBLE >= 3 && nbits < 32 && size != 0)
-	{
-	  x = *--up, size--;
-	  x <<= GMP_NAIL_BITS;
-	  x >>= nbits;
-	  mlo |= x;
-	  nbits += GMP_NUMB_BITS;
-
-	  if (LIMBS_PER_DOUBLE >= 4 && nbits < 32 && size != 0)
-	    {
-	      x = *--up;
-	      x <<= GMP_NAIL_BITS;
-	      x >>= nbits;
-	      mlo |= x;
-	      nbits += GMP_NUMB_BITS;
-	    }
-	}
-    }
-
- done:;
-
-#endif
-  {
-    if (UNLIKELY (exp >= CONST_1024))
-      {
-	/* overflow, return infinity */
-      ieee_infinity:
-	mhi = 0;
-	mlo = 0;
-	exp = 1024;
-      }
-    else if (UNLIKELY (exp <= CONST_NEG_1023))
-      {
-	int rshift;
-
-	if (LIKELY (exp <= CONST_NEG_1022_SUB_53))
-	  return 0.0;	 /* denorm underflows to zero */
-
-	rshift = -1022 - exp;
-	ASSERT (rshift > 0 && rshift < 53);
-#if GMP_LIMB_BITS > 53
-	mlo >>= rshift;
-	mhi = mlo >> 32;
-#else
-	if (rshift >= 32)
-	  {
-	    mlo = mhi;
-	    mhi = 0;
-	    rshift -= 32;
-	  }
-	lshift = GMP_LIMB_BITS - rshift;
-	mlo = (mlo >> rshift) | (rshift == 0 ? 0 : mhi << lshift);
-	mhi >>= rshift;
-#endif
-	exp = -1023;
-      }
-  }
-  u.s.manh = mhi;
-  u.s.manl = mlo;
-  u.s.exp = exp + 1023;
-  u.s.sig = (sign < 0);
-  return u.d;
-}
-#else
-
-
-#define ONE_LIMB    (GMP_LIMB_BITS == 64 && 2*GMP_NUMB_BITS >= 53)
-#define TWO_LIMBS   (GMP_LIMB_BITS == 32 && 3*GMP_NUMB_BITS >= 53)
-
-  if (_GMP_IEEE_FLOATS && (ONE_LIMB || TWO_LIMBS))
-    {
-      union ieee_double_extract	 u;
-      mp_limb_t	 m0, m1, m2, rmask;
-      int	 lshift, rshift;
-
-      m0 = up[size-1];			    /* high limb */
-      m1 = (size >= 2 ? up[size-2] : 0);   /* second highest limb */
-      count_leading_zeros (lshift, m0);
-
-      /* relative to just under high non-zero bit */
-      exp -= (lshift - GMP_NAIL_BITS) + 1;
-
-      if (ONE_LIMB)
-	{
-	  /* lshift to have high of m0 non-zero, and collapse nails */
-	  rshift = GMP_LIMB_BITS - lshift;
-	  m1 <<= GMP_NAIL_BITS;
-	  rmask = GMP_NAIL_BITS == 0 && lshift == 0 ? 0 : MP_LIMB_T_MAX;
-	  m0 = (m0 << lshift) | ((m1 >> rshift) & rmask);
-
-	  /* rshift back to have bit 53 of m0 the high non-zero */
-	  m0 >>= 11;
-	}
-      else /* TWO_LIMBS */
-	{
-	  m2 = (size >= 3 ? up[size-3] : 0);  /* third highest limb */
-
-	  /* collapse nails from m1 and m2 */
-#if GMP_NAIL_BITS != 0
-	  m1 = (m1 << GMP_NAIL_BITS) | (m2 >> (GMP_NUMB_BITS-GMP_NAIL_BITS));
-	  m2 <<= 2*GMP_NAIL_BITS;
-#endif
-
-	  /* lshift to have high of m0:m1 non-zero, collapse nails from m0 */
-	  rshift = GMP_LIMB_BITS - lshift;
-	  rmask = (GMP_NAIL_BITS == 0 && lshift == 0 ? 0 : MP_LIMB_T_MAX);
-	  m0 = (m0 << lshift) | ((m1 >> rshift) & rmask);
-	  m1 = (m1 << lshift) | ((m2 >> rshift) & rmask);
-
-	  /* rshift back to have bit 53 of m0:m1 the high non-zero */
-	  m1 = (m1 >> 11) | (m0 << (GMP_LIMB_BITS-11));
-	  m0 >>= 11;
-	}
-
-      if (UNLIKELY (exp >= CONST_1024))
-	{
-	  /* overflow, return infinity */
-	ieee_infinity:
-	  m0 = 0;
-	  m1 = 0;
-	  exp = 1024;
-	}
-      else if (UNLIKELY (exp <= CONST_NEG_1023))
-	{
-	  if (LIKELY (exp <= CONST_NEG_1022_SUB_53))
-	    return 0.0;	 /* denorm underflows to zero */
-
-	  rshift = -1022 - exp;
-	  ASSERT (rshift > 0 && rshift < 53);
-	  if (ONE_LIMB)
-	    {
-	      m0 >>= rshift;
-	    }
-	  else /* TWO_LIMBS */
-	    {
-	      if (rshift >= 32)
-		{
-		  m1 = m0;
-		  m0 = 0;
-		  rshift -= 32;
-		}
-	      lshift = GMP_LIMB_BITS - rshift;
-	      m1 = (m1 >> rshift) | (rshift == 0 ? 0 : m0 << lshift);
-	      m0 >>= rshift;
-	    }
-	  exp = -1023;
-	}
-
-      if (ONE_LIMB)
-	{
-#if GMP_LIMB_BITS > 32	/* avoid compiler warning about big shift */
-	  u.s.manh = m0 >> 32;
-#endif
-	  u.s.manl = m0;
-	}
-      else /* TWO_LIMBS */
-	{
-	  u.s.manh = m0;
-	  u.s.manl = m1;
-	}
-
-      u.s.exp = exp + 1023;
-      u.s.sig = (sign < 0);
-      return u.d;
-    }
-  else
+#if ! _GMP_IEEE_FLOATS
     {
       /* Non-IEEE or strange limb size, do something generic. */
 
@@ -487,4 +245,141 @@ mpn_get_d (mp_srcptr up, mp_size_t size, mp_size_t sign, long exp)
       return (sign >= 0 ? d : -d);
     }
 #endif
+
+  up += size;
+
+#if GMP_LIMB_BITS == 64
+  mlo = up[-1];
+  count_leading_zeros (lshift, mlo);
+
+  exp -= (lshift - GMP_NAIL_BITS) + 1;
+  mlo <<= lshift;
+
+  nbits = GMP_LIMB_BITS - lshift;
+
+  if (nbits < 53 && size > 1)
+    {
+      x = up[-2];
+      x <<= GMP_NAIL_BITS;
+      x >>= nbits;
+      mlo |= x;
+      nbits += GMP_NUMB_BITS;
+
+      if (LIMBS_PER_DOUBLE >= 3 && nbits < 53 && size > 2)
+	{
+	  x = up[-3];
+	  x <<= GMP_NAIL_BITS;
+	  x >>= nbits;
+	  mlo |= x;
+	  nbits += GMP_NUMB_BITS;
+	}
+    }
+  mhi = mlo >> (32 + 11);
+  mlo = mlo >> 11;		/* later implicitly truncated to 32 bits */
+#endif
+#if GMP_LIMB_BITS == 32
+  x = *--up;
+  count_leading_zeros (lshift, x);
+
+  exp -= (lshift - GMP_NAIL_BITS) + 1;
+  x <<= lshift;
+  mhi = x >> 11;
+
+  if (lshift < 11)		/* FIXME: never true if NUMB < 20 bits */
+    {
+      /* All 20 bits in mhi */
+      mlo = x << 21;
+      /* >= 1 bit in mlo */
+      nbits = GMP_LIMB_BITS - lshift - 21;
+    }
+  else
+    {
+      if (size > 1)
+	{
+	  nbits = GMP_LIMB_BITS - lshift;
+
+	  x = *--up, size--;
+	  x <<= GMP_NAIL_BITS;
+	  mhi |= x >> nbits >> 11;
+
+	  mlo = x << GMP_LIMB_BITS - nbits - 11;
+	  nbits = nbits + 11 - GMP_NAIL_BITS;
+	}
+      else
+	{
+	  mlo = 0;
+	  goto done;
+	}
+    }
+
+  /* Now all needed bits in mhi have been accumulated.  Add bits to mlo.  */
+
+  if (LIMBS_PER_DOUBLE >= 2 && nbits < 32 && size > 1)
+    {
+      x = up[-1];
+      x <<= GMP_NAIL_BITS;
+      x >>= nbits;
+      mlo |= x;
+      nbits += GMP_NUMB_BITS;
+
+      if (LIMBS_PER_DOUBLE >= 3 && nbits < 32 && size > 2)
+	{
+	  x = up[-2];
+	  x <<= GMP_NAIL_BITS;
+	  x >>= nbits;
+	  mlo |= x;
+	  nbits += GMP_NUMB_BITS;
+
+	  if (LIMBS_PER_DOUBLE >= 4 && nbits < 32 && size > 3)
+	    {
+	      x = up[-3];
+	      x <<= GMP_NAIL_BITS;
+	      x >>= nbits;
+	      mlo |= x;
+	      nbits += GMP_NUMB_BITS;
+	    }
+	}
+    }
+
+ done:;
+
+#endif
+  if (UNLIKELY (exp >= CONST_1024))
+    {
+      /* overflow, return infinity */
+    ieee_infinity:
+      mhi = 0;
+      mlo = 0;
+      exp = 1024;
+    }
+  else if (UNLIKELY (exp <= CONST_NEG_1023))
+    {
+      int rshift;
+
+      if (LIKELY (exp <= CONST_NEG_1022_SUB_53))
+	return 0.0;	 /* denorm underflows to zero */
+
+      rshift = -1022 - exp;
+      ASSERT (rshift > 0 && rshift < 53);
+#if GMP_LIMB_BITS > 53
+      mlo >>= rshift;
+      mhi = mlo >> 32;
+#else
+      if (rshift >= 32)
+	{
+	  mlo = mhi;
+	  mhi = 0;
+	  rshift -= 32;
+	}
+      lshift = GMP_LIMB_BITS - rshift;
+      mlo = (mlo >> rshift) | (rshift == 0 ? 0 : mhi << lshift);
+      mhi >>= rshift;
+#endif
+      exp = -1023;
+    }
+  u.s.manh = mhi;
+  u.s.manl = mlo;
+  u.s.exp = exp + 1023;
+  u.s.sig = (sign < 0);
+  return u.d;
 }

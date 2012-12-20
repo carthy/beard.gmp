@@ -1,16 +1,19 @@
 /* Copyright 2006, 2007, 2009, 2010 Free Software Foundation, Inc.
 
-This program is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation; either version 3 of the License, or (at your option) any later
-version.
+This file is part of the GNU MP Library test suite.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+The GNU MP Library test suite is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 3 of the License,
+or (at your option) any later version.
+
+The GNU MP Library test suite is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see http://www.gnu.org/licenses/.  */
+the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 
 
 #include <stdlib.h>		/* for strtol */
@@ -56,7 +59,7 @@ static unsigned long test;
 static void
 check_one (mp_ptr qp, mp_srcptr rp,
 	   mp_srcptr np, mp_size_t nn, mp_srcptr dp, mp_size_t dn,
-	   char *fname, mp_limb_t q_allowed_err)
+	   const char *fname, mp_limb_t q_allowed_err)
 {
   mp_size_t qn = nn - dn + 1;
   mp_ptr tp;
@@ -408,6 +411,50 @@ main (int argc, char **argv)
 	  ASSERT_ALWAYS (ran == scratch[itch]);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
 	  check_one (qp, NULL, np, nn, dp, dn, "mpn_div_q", 0);
+	}
+
+      if (dn >= 2 && nn >= 2)
+	{
+	  mp_limb_t qh;
+
+	  /* mpn_divrem_2 */
+	  MPN_COPY (rp, np, nn);
+	  qp[nn - 2] = qp[nn-1] = qran1;
+
+	  qh = mpn_divrem_2 (qp, 0, rp, nn, dp + dn - 2);
+	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
+	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
+	  qp[nn - 2] = qh;
+
+	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_divrem_2", 0);
+
+	  /* Missing: divrem_2 with fraction limbs. */
+
+	  /* mpn_div_qr_2 (normalized) */
+	  qp[nn - 2] = qran1;
+
+	  qh = mpn_div_qr_2 (qp, rp, np, nn, dp + dn - 2);
+	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
+	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
+	  qp[nn - 2] = qh;
+
+	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_div_qr_2 (normalized)", 0);
+
+	  /* mpn_div_qr_2 (unnormalized) */
+	  dp[dn - 1] &= ~GMP_NUMB_HIGHBIT;
+	  if (dp[dn - 1] == 0)
+	    continue;
+
+	  qp[nn - 2] = qran1;
+
+	  qh = mpn_div_qr_2 (qp, rp, np, nn, dp + dn - 2);
+	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
+	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
+	  qp[nn - 2] = qh;
+
+	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_div_qr_2 (unnormalized)", 0);
+
+	  qp[nn - dn + 1] = qran1;
 	}
 
       /* Finally, test mpn_div_q without msb set.  */

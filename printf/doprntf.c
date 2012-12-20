@@ -36,6 +36,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 
 #include "gmp.h"
 #include "gmp-impl.h"
+#include "longlong.h"
 
 
 /* change this to "#define TRACE(x) x" for diagnostics */

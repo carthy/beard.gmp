@@ -15,7 +15,7 @@
 
 @SET_MAKE@
 
-# Copyright 2001, 2002, 2003 Free Software Foundation, Inc.
+# Copyright 2001, 2002, 2003, 2012 Free Software Foundation, Inc.
 #
 # This file is part of the GNU MP Library.
 #
@@ -51,7 +51,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-ANSI2KNR = $(top_builddir)/ansi2knr
 subdir = cxx
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -66,7 +65,7 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libcxx_la_LIBADD =
 am_libcxx_la_OBJECTS = isfuns.lo ismpf.lo ismpq.lo ismpz.lo ismpznw.lo \
-	osdoprnti.lo osfuns.lo osmpf.lo osmpq.lo osmpz.lo
+	limits.lo osdoprnti.lo osfuns.lo osmpf.lo osmpq.lo osmpz.lo
 libcxx_la_OBJECTS = $(am_libcxx_la_OBJECTS)
 @WANT_CXX_TRUE@am_libcxx_la_rpath =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -184,8 +183,8 @@ SHELL = @SHELL@
 SPEED_CYCLECOUNTER_OBJ = @SPEED_CYCLECOUNTER_OBJ@
 STRIP = @STRIP@
 TAL_OBJECT = @TAL_OBJECT@
+TUNE_LIBS = @TUNE_LIBS@
 TUNE_SQR_OBJ = @TUNE_SQR_OBJ@
-U = @U@
 U_FOR_BUILD = @U_FOR_BUILD@
 VERSION = @VERSION@
 WITH_READLINE_01 = @WITH_READLINE_01@
@@ -232,7 +231,6 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 mpn_objects = @mpn_objects@
 mpn_objs_in_libgmp = @mpn_objs_in_libgmp@
-mpn_objs_in_libmp = @mpn_objs_in_libmp@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
@@ -249,7 +247,7 @@ top_srcdir = @top_srcdir@
 INCLUDES = -D__GMP_WITHIN_GMPXX -I$(top_srcdir)
 @WANT_CXX_TRUE@noinst_LTLIBRARIES = libcxx.la
 libcxx_la_SOURCES = \
-  isfuns.cc ismpf.cc ismpq.cc ismpz.cc ismpznw.cc \
+  isfuns.cc ismpf.cc ismpq.cc ismpz.cc ismpznw.cc limits.cc \
   osdoprnti.cc osfuns.cc osmpf.cc osmpq.cc osmpz.cc
 
 all: all-am
@@ -303,11 +301,6 @@ mostlyclean-compile:
 
 distclean-compile:
 	-rm -f *.tab.c
-$(top_builddir)/ansi2knr:
-	$(am__cd) $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) ./ansi2knr
-
-mostlyclean-kr:
-	-test "$U" = "" || rm -f *_.c
 
 .cc.o:
 	$(CXXCOMPILE) -c -o $@ $<
@@ -491,7 +484,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
 pdf: pdf-am
@@ -504,7 +497,7 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: $(top_builddir)/ansi2knr install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-noinstLTLIBRARIES ctags distclean \
@@ -516,9 +509,8 @@ uninstall-am:
 	install-pdf install-pdf-am install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-kr \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -3,6 +3,7 @@
    Requires that d < B / 3.
 
    Contributed to the GNU project by Torbjorn Granlund.
+   Based on a suggestion by Peter L. Montgomery.
 
    THE FUNCTIONS IN THIS FILE ARE INTERNAL WITH MUTABLE INTERFACES.  IT IS ONLY
    SAFE TO REACH THEM THROUGH DOCUMENTED INTERFACES.  IN FACT, IT IS ALMOST
@@ -45,9 +46,9 @@ mpn_mod_1s_3p_cps (mp_limb_t cps[6], mp_limb_t b)
 
   B1modb = -b * ((bi >> (GMP_LIMB_BITS-cnt)) | (CNST_LIMB(1) << cnt));
   ASSERT (B1modb <= b);		/* NB: not fully reduced mod b */
-  udiv_rnd_preinv (B2modb, B1modb, b, bi);
-  udiv_rnd_preinv (B3modb, B2modb, b, bi);
-  udiv_rnd_preinv (B4modb, B3modb, b, bi);
+  udiv_rnnd_preinv (B2modb, B1modb, 0, b, bi);
+  udiv_rnnd_preinv (B3modb, B2modb, 0, b, bi);
+  udiv_rnnd_preinv (B4modb, B3modb, 0, b, bi);
 
   cps[0] = bi;
   cps[1] = cnt;
@@ -72,7 +73,7 @@ mpn_mod_1s_3p_cps (mp_limb_t cps[6], mp_limb_t b)
 mp_limb_t
 mpn_mod_1s_3p (mp_srcptr ap, mp_size_t n, mp_limb_t b, mp_limb_t cps[6])
 {
-  mp_limb_t rh, rl, bi, q, ph, pl, ch, cl, r;
+  mp_limb_t rh, rl, bi, ph, pl, ch, cl, r;
   mp_limb_t B1modb, B2modb, B3modb, B4modb;
   mp_size_t i;
   int cnt;
@@ -102,8 +103,8 @@ mpn_mod_1s_3p (mp_srcptr ap, mp_size_t n, mp_limb_t b, mp_limb_t cps[6])
       n -= 1;
       break;
     case 1:	/* n mod 3 = 2 */
-      umul_ppmm (ph, pl, ap[n - 1], B1modb);
-      add_ssaaaa (rh, rl, ph, pl, 0, ap[n - 2]);
+      rh = ap[n - 1];
+      rl = ap[n - 2];
       n -= 2;
       break;
     }
@@ -129,20 +130,14 @@ mpn_mod_1s_3p (mp_srcptr ap, mp_size_t n, mp_limb_t b, mp_limb_t cps[6])
       add_ssaaaa (rh, rl, rh, rl, ph, pl);
     }
 
-  bi = cps[0];
-  cnt = cps[1];
-
-#if 1
   umul_ppmm (rh, cl, rh, B1modb);
   add_ssaaaa (rh, rl, rh, rl, 0, cl);
-  r = (rh << cnt) | (rl >> (GMP_LIMB_BITS - cnt));
-#else
-  udiv_qrnnd_preinv (q, r, rh >> (GMP_LIMB_BITS - cnt),
-		     (rh << cnt) | (rl >> (GMP_LIMB_BITS - cnt)), b, bi);
-  ASSERT (q <= 3);	/* optimize for small quotient? */
-#endif
 
-  udiv_qrnnd_preinv (q, r, r, rl << cnt, b, bi);
+  cnt = cps[1];
+  bi = cps[0];
+
+  r = (rh << cnt) | (rl >> (GMP_LIMB_BITS - cnt));
+  udiv_rnnd_preinv (r, r, rl << cnt, b, bi);
 
   return r >> cnt;
 }

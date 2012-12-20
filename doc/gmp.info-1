@@ -2,7 +2,7 @@ This is ../../gmp/doc/gmp.info, produced by makeinfo version 4.13 from
 ../../gmp/doc/gmp.texi.
 
 This manual describes how to install and use the GNU multiple precision
-arithmetic library, version 5.0.5.
+arithmetic library, version 5.1.0.
 
    Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -28,7 +28,7 @@ GNU MP
 ******
 
    This manual describes how to install and use the GNU multiple
-precision arithmetic library, version 5.0.5.
+precision arithmetic library, version 5.1.0.
 
    Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -58,7 +58,6 @@ is included in *note GNU Free Documentation License::.
 * Formatted Output::           `printf' style output.
 * Formatted Input::            `scanf' style input.
 * C++ Class Interface::        Class wrappers around GMP types.
-* BSD Compatible Functions::   All functions found in BSD MP.
 * Custom Allocation::          How to customize the internal allocation.
 * Language Bindings::          Using GMP from other languages.
 * Algorithms::                 What happens behind the scenes.
@@ -230,7 +229,7 @@ Build Directory
      directory.  For example
 
           cd /my/build/dir
-          /my/sources/gmp-5.0.5/configure
+          /my/sources/gmp-5.1.0/configure
 
      Not all `make' programs have the necessary features (`VPATH') to
      support this.  In particular, SunOS and Slowaris `make' have bugs
@@ -360,10 +359,8 @@ CPU types
 
 Generic C Build
      If some of the assembly code causes problems, or if otherwise
-     desired, the generic C code can be selected with CPU `none'.  For
-     example,
-
-          ./configure --host=none-unknown-freebsd3.5
+     desired, the generic C code can be selected with the configure
+     `--disable-assembly'.
 
      Note that this will run quite slowly, but it should be portable
      and should at least make it possible to get something running if
@@ -419,8 +416,7 @@ Fat binary, `--enable-fat'
      Compiling is done with both `CPPFLAGS' and `CFLAGS', but
      preprocessing uses just `CPPFLAGS'.  This distinction is because
      most preprocessors won't accept all the flags the compiler does.
-     Preprocessing is done separately in some configure tests, and in
-     the `ansi2knr' support for K&R compilers.
+     Preprocessing is done separately in some configure tests.
 
 `CC_FOR_BUILD'
      Some build-time programs are compiled and run to generate
@@ -527,11 +523,6 @@ FFT Multiplication, `--disable-fft'
      higher degree Toom, and Fermat FFT.  The FFT is only used on large
      to very large operands and can be disabled to save code size if
      desired.
-
-Berkeley MP, `--enable-mpbsd'
-     The Berkeley MP compatibility library (`libmp') and header file
-     (`mp.h') are built and installed only if `--enable-mpbsd' is used.
-     *Note BSD Compatible Functions::.
 
 Assertion Checking, `--enable-assert'
      This option enables some consistency checking within the library.
@@ -736,7 +727,7 @@ MIPS under IRIX 6 (`mips*-*-irix[6789]')
 
 PowerPC 64 (`powerpc64', `powerpc620', `powerpc630', `powerpc970', `power4', `power5')
 
-    `ABI=aix64'
+    `ABI=mode64'
           The AIX 64 ABI uses 64-bit limbs and pointers and is the
           default on PowerPC 64 `*-*-aix*' systems.  Applications must
           be compiled with
@@ -744,10 +735,8 @@ PowerPC 64 (`powerpc64', `powerpc620', `powerpc630', `powerpc970', `power4', `po
                gcc  -maix64
                xlc  -q64
 
-    `ABI=mode64'
-          The `mode64' ABI uses 64-bit limbs and pointers, and is the
-          default on 64-bit GNU/Linux, BSD, and Mac OS X/Darwin
-          systems.  Applications must be compiled with
+          On 64-bit GNU/Linux, BSD, and Mac OS X/Darwin systems, the
+          applications must be compiled with
 
                gcc  -m64
 
@@ -756,16 +745,16 @@ PowerPC 64 (`powerpc64', `powerpc620', `powerpc630', `powerpc970', `power4', `po
           chip still in 32-bit mode and using 32-bit calling
           conventions.  This is the default for systems where the true
           64-bit ABI is unavailable.  No special compiler options are
-          typically needed for applications.
+          typically needed for applications.  This ABI is not available
+          under AIX.
 
     `ABI=32'
           This is the basic 32-bit PowerPC ABI, with a 32-bit limb.  No
           special compiler options are needed for applications.
 
-     GMP's speed is greatest for `aix64' and `mode64'.  In `ABI=32'
-     only the 32-bit ISA is used and this doesn't make full use of a
-     64-bit chip.  On a suitable system we could perhaps use more of
-     the ISA, but there are no plans to do so.
+     GMP's speed is greatest for the `mode64' ABI, the `mode32' ABI is
+     2nd best.  In `ABI=32' only the 32-bit ISA is used and this
+     doesn't make full use of a 64-bit chip.
 
 
 Sparc V9 (`sparc64', `sparcv9', `ultrasparc*')
@@ -980,10 +969,11 @@ Power CPU Types
      choose the right one for the CPU that will be used.  Currently GMP
      has no assembly code support for using just the common instruction
      subset.  To get executables that run on both, the current
-     suggestion is to use the generic C code (CPU `none'), possibly
-     with appropriate compiler options (like `-mcpu=common' for `gcc').
-     CPU `rs6000' (which is not a CPU but a family of workstations) is
-     accepted by `config.sub', but is currently equivalent to `none'.
+     suggestion is to use the generic C code (`--disable-assembly'),
+     possibly with appropriate compiler options (like `-mcpu=common' for
+     `gcc').  CPU `rs6000' (which is not a CPU but a family of
+     workstations) is accepted by `config.sub', but is currently
+     equivalent to `--disable-assembly'.
 
 Sparc CPU Types
      `sparcv8' or `supersparc' on relevant systems will give a
@@ -1000,7 +990,7 @@ Sparc App Regs
      `-mcmodel=embmedany' (which uses `g4' as a data segment pointer),
      and for applications wanting to use those registers for special
      purposes.  In these cases the only suggestion currently is to
-     build GMP with CPU `none' to avoid the assembly code.
+     build GMP with `--disable-assembly' to avoid the assembly code.
 
 SunOS 4
      `/usr/bin/m4' lacks various features needed to process `.asm'
@@ -1288,18 +1278,14 @@ There are six classes of functions in the GMP library:
      `mpf_'.  The associated type is `mpf_t'.  There are about 60
      functions is this class.  (*note Floating-point Functions::)
 
-  4. Functions compatible with Berkeley MP, such as `itom', `madd', and
-     `mult'.  The associated type is `MINT'.  (*note BSD Compatible
-     Functions::)
-
-  5. Fast low-level functions that operate on natural numbers.  These
+  4. Fast low-level functions that operate on natural numbers.  These
      are used by the functions in the preceding groups, and you can
      also call them directly from very time-critical user programs.
      These functions' names begin with `mpn_'.  The associated type is
      array of `mp_limb_t'.  There are about 30 (hard-to-use) functions
      in this class.  (*note Low-level Functions::)
 
-  6. Miscellaneous functions.  Functions for setting up custom
+  5. Miscellaneous functions.  Functions for setting up custom
      allocation and functions for generating random numbers.  (*note
      Custom Allocation::, and *note Random Number Functions::)
 
@@ -1492,7 +1478,7 @@ File: gmp.info,  Node: Useful Macros and Constants,  Next: Compatibility with ol
 
  -- Global Constant: const char * const gmp_version
      The GMP version number, as a null-terminated string, in the form
-     "i.j.k".  This release is "5.0.5".  Note that the format "i.j" was
+     "i.j.k".  This release is "5.1.0".  Note that the format "i.j" was
      used when k was zero was used before version 4.3.0.
 
  -- Macro: __GMP_CC
@@ -1519,9 +1505,6 @@ versions, with the following exceptions.
    There are a number of compatibility issues between GMP 1 and GMP 2
 that of course also apply when porting applications from GMP 1 to GMP
 4.  Please see the GMP 2 manual for details.
-
-   The Berkeley MP compatibility library (*note BSD Compatible
-Functions::) is source and binary compatible with the standard `libmp'.
 
 
 File: gmp.info,  Node: Demonstration Programs,  Next: Efficiency,  Prev: Compatibility with older versions,  Up: GMP Basics
@@ -1808,7 +1791,7 @@ Source File Paths
      path to the source directory.
 
           cd /my/build/dir
-          /my/source/dir/gmp-5.0.5/configure
+          /my/source/dir/gmp-5.1.0/configure
 
      This works via `VPATH', and might require GNU `make'.  Alternately
      it might be possible to change the `.c.lo' rules appropriately.
@@ -1824,8 +1807,8 @@ Assertion Checking
      benefit from `--enable-assert' since it adds checks on the
      parameters of most such functions, many of which have subtle
      restrictions on their usage.  Note however that only the generic C
-     code has checks, not the assembly code, so CPU `none' should be
-     used for maximum checking.
+     code has checks, not the assembly code, so `--disable-assembly'
+     should be used for maximum checking.
 
 Temporary Memory Checking
      The build option `--enable-alloca=debug' arranges that each block
@@ -1845,7 +1828,7 @@ Maximum Debuggability
      would be
 
           ./configure --disable-shared --enable-assert \
-            --enable-alloca=debug --host=none CFLAGS=-g
+            --enable-alloca=debug --disable-assembly CFLAGS=-g
 
      For C++, add `--enable-cxx CXXFLAGS=-g'.
 
@@ -1857,12 +1840,12 @@ Checker
      A build of GMP with checking within GMP itself can be made.  This
      will run very very slowly.  On GNU/Linux for example,
 
-          ./configure --host=none-pc-linux-gnu CC=checkergcc
+          ./configure --disable-assembly CC=checkergcc
 
-     `--host=none' must be used, since the GMP assembly code doesn't
-     support the checking scheme.  The GMP C++ features cannot be used,
-     since current versions of checker (0.9.9.1) don't yet support the
-     standard C++ library.
+     `--disable-assembly' must be used, since the GMP assembly code
+     doesn't support the checking scheme.  The GMP C++ features cannot
+     be used, since current versions of checker (0.9.9.1) don't yet
+     support the standard C++ library.
 
 Valgrind
      The valgrind program (`http://valgrind.org/') is a memory checker
@@ -2178,10 +2161,15 @@ object is initialized.
      necessary; reallocation is handled automatically by GMP when
      needed.
 
-     N is only the initial space, X will grow automatically in the
+     While N defines the initial space, X will grow automatically in the
      normal way, if necessary, for subsequent values stored.
      `mpz_init2' makes it possible to avoid such reallocations if a
      maximum size is known in advance.
+
+     In preparation for an operation, GMP often allocates one limb more
+     than ultimately needed.  To make sure GMP will not perform
+     reallocation for X, you need to add the number of bits in
+     `mp_limb_t' to N.
 
  -- Function: void mpz_clear (mpz_t X)
      Free the space occupied by X.  Call this function for all `mpz_t'
@@ -2611,9 +2599,11 @@ File: gmp.info,  Node: Number Theoretic Functions,  Next: Integer Comparisons,  
      0 if N is definitely composite.
 
      This function does some trial divisions, then some Miller-Rabin
-     probabilistic primality tests.  REPS controls how many such tests
-     are done, 5 to 10 is a reasonable number, more will reduce the
-     chances of a composite being returned as "probably prime".
+     probabilistic primality tests.  The argument REPS controls how
+     many such tests are done; a higher value will reduce the chances
+     of a composite being returned as "probably prime".  25 is a
+     reasonable number; a composite number will then be identified as a
+     prime with a probability of less than 2^(-50).
 
      Miller-Rabin and similar tests can be more properly called
      compositeness tests.  Numbers which fail are known to be composite
@@ -2706,8 +2696,17 @@ File: gmp.info,  Node: Number Theoretic Functions,  Next: Integer Comparisons,  
      result in ROP.  The return value is how many such occurrences were
      removed.
 
- -- Function: void mpz_fac_ui (mpz_t ROP, unsigned long int OP)
-     Set ROP to OP!, the factorial of OP.
+ -- Function: void mpz_fac_ui (mpz_t ROP, unsigned long int N)
+ -- Function: void mpz_2fac_ui (mpz_t ROP, unsigned long int N)
+ -- Function: void mpz_mfac_uiui (mpz_t ROP, unsigned long int N,
+          unsigned long int M)
+     Set ROP to the factorial of N: `mpz_fac_ui' computes the plain
+     factorial N!, `mpz_2fac_ui' computes the double-factorial N!!, and
+     `mpz_mfac_uiui' the M-multi-factorial N!^(M).
+
+ -- Function: void mpz_primorial_ui (mpz_t ROP, unsigned long int N)
+     Set ROP to the primorial of N, i.e. the product of all positive
+     prime numbers smaller then or equal to N.
 
  -- Function: void mpz_bin_ui (mpz_t ROP, mpz_t N, unsigned long int K)
  -- Function: void mpz_bin_uiui (mpz_t ROP, unsigned long int N,
@@ -3365,7 +3364,7 @@ File: gmp.info,  Node: Comparing Rationals,  Next: Applying Integer Functions,  
      Return +1 if OP > 0, 0 if OP = 0, and -1 if OP < 0.
 
      This function is actually implemented as a macro.  It evaluates its
-     arguments multiple times.
+     argument multiple times.
 
  -- Function: int mpq_equal (mpq_t OP1, mpq_t OP2)
      Return non-zero if OP1 and OP2 are equal, zero if they are
@@ -3862,7 +3861,7 @@ File: gmp.info,  Node: Float Comparison,  Next: I/O of Floats,  Prev: Float Arit
      Return +1 if OP > 0, 0 if OP = 0, and -1 if OP < 0.
 
      This function is actually implemented as a macro.  It evaluates
-     its arguments multiple times.
+     its argument multiple times.
 
 
 File: gmp.info,  Node: I/O of Floats,  Next: Miscellaneous Float Functions,  Prev: Float Comparison,  Up: Floating-point Functions
@@ -4062,7 +4061,7 @@ For example, {S1P, S1N}.
 
      This function requires that S1N is greater than or equal to S2N.
 
- -- Function: void mpn_neg (mp_limb_t *RP, const mp_limb_t *SP,
+ -- Function: mp_limb_t mpn_neg (mp_limb_t *RP, const mp_limb_t *SP,
           mp_size_t N)
      Perform the negation of {SP, N}, and write the result to {RP, N}.
      Return carry-out.
@@ -4259,9 +4258,9 @@ For example, {S1P, S1N}.
      {YP, YN}.  The result can be up to YN limbs, the return value is
      the actual number produced.  Both source operands are destroyed.
 
-     {XP, XN} must have at least as many bits as {YP, YN}.  {YP, YN}
-     must be odd.  Both operands must have non-zero most significant
-     limbs.  No overlap is permitted between {XP, XN} and {YP, YN}.
+     It is required that XN >= YN > 0, and the most significant limb of
+     {YP, YN} must be non-zero.  No overlap is permitted between {XP,
+     XN} and {YP, YN}.
 
  -- Function: mp_limb_t mpn_gcd_1 (const mp_limb_t *XP, mp_size_t XN,
           mp_limb_t YLIMB)
@@ -5203,7 +5202,7 @@ and that for instance using `+' with an `mpz_t' will have unpredictable
 results.  For classes with overloading, see *note C++ Class Interface::.
 
 
-File: gmp.info,  Node: C++ Class Interface,  Next: BSD Compatible Functions,  Prev: Formatted Input,  Up: Top
+File: gmp.info,  Node: C++ Class Interface,  Next: Custom Allocation,  Prev: Formatted Input,  Up: Top
 
 12 C++ Class Interface
 **********************
@@ -5332,9 +5331,10 @@ File: gmp.info,  Node: C++ Interface Integers,  Next: C++ Interface Rationals,  
  -- Function:  mpz_class::mpz_class (type N)
      Construct an `mpz_class'.  All the standard C++ types may be used,
      except `long long' and `long double', and all the GMP C++ classes
-     can be used.  Any necessary conversion follows the corresponding C
-     function, for example `double' follows `mpz_set_d' (*note
-     Assigning Integers::).
+     can be used, although conversions from `mpq_class' and `mpf_class'
+     are `explicit'.  Any necessary conversion follows the
+     corresponding C function, for example `double' follows `mpz_set_d'
+     (*note Assigning Integers::).
 
  -- Function: explicit mpz_class::mpz_class (mpz_t Z)
      Construct an `mpz_class' from an `mpz_t'.  The value in Z is
@@ -5351,6 +5351,10 @@ File: gmp.info,  Node: C++ Interface Integers,  Next: C++ Interface Rationals,  
      If the string is not a valid integer, an `std::invalid_argument'
      exception is thrown.  The same applies to `operator='.
 
+ -- Function: mpz_class operator"" _mpz (const char *STR)
+     With C++11 compilers, integers can be constructed with the syntax
+     `123_mpz' which is equivalent to `mpz_class("123")'.
+
  -- Function: mpz_class operator/ (mpz_class A, mpz_class D)
  -- Function: mpz_class operator% (mpz_class A, mpz_class D)
      Divisions involving `mpz_class' round towards zero, as per the
@@ -5364,7 +5368,7 @@ File: gmp.info,  Node: C++ Interface Integers,  Next: C++ Interface Rationals,  
           ...
           mpz_fdiv_q (q.get_mpz_t(), a.get_mpz_t(), d.get_mpz_t());
 
- -- Function: mpz_class abs (mpz_class OP1)
+ -- Function: mpz_class abs (mpz_class OP)
  -- Function: int cmp (mpz_class OP1, type OP2)
  -- Function: int cmp (type OP1, mpz_class OP2)
  -- Function: bool mpz_class::fits_sint_p (void)
@@ -5381,6 +5385,8 @@ File: gmp.info,  Node: C++ Interface Integers,  Next: C++ Interface Rationals,  
  -- Function: int mpz_class::set_str (const string& STR, int BASE)
  -- Function: int sgn (mpz_class OP)
  -- Function: mpz_class sqrt (mpz_class OP)
+ -- Function: void mpz_class::swap (mpz_class& OP)
+ -- Function: void swap (mpz_class& OP1, mpz_class& OP2)
      These functions provide a C++ class interface to the corresponding
      GMP C routines.
 
@@ -5412,9 +5418,10 @@ called.
  -- Function:  mpq_class::mpq_class (type OP)
  -- Function:  mpq_class::mpq_class (integer NUM, integer DEN)
      Construct an `mpq_class'.  The initial value can be a single value
-     of any type, or a pair of integers (`mpz_class' or standard C++
-     integer types) representing a fraction, except that `long long'
-     and `long double' are not supported.  For example,
+     of any type (conversion from `mpf_class' is `explicit'), or a pair
+     of integers (`mpz_class' or standard C++ integer types)
+     representing a fraction, except that `long long' and `long double'
+     are not supported.  For example,
 
           mpq_class q (99);
           mpq_class q (1.75);
@@ -5435,6 +5442,11 @@ called.
      If the string is not a valid rational, an `std::invalid_argument'
      exception is thrown.  The same applies to `operator='.
 
+ -- Function: mpq_class operator"" _mpq (const char *STR)
+     With C++11 compilers, integral rationals can be constructed with
+     the syntax `123_mpq' which is equivalent to `mpq_class(123_mpz)'.
+     Other rationals can be built as `-1_mpq/2' or `0xb_mpq/123456_mpz'.
+
  -- Function: void mpq_class::canonicalize ()
      Put an `mpq_class' into canonical form, as per *note Rational
      Number Functions::.  All arithmetic operators require their
@@ -5449,6 +5461,8 @@ called.
  -- Function: int mpq_class::set_str (const char *STR, int BASE)
  -- Function: int mpq_class::set_str (const string& STR, int BASE)
  -- Function: int sgn (mpq_class OP)
+ -- Function: void mpq_class::swap (mpq_class& OP)
+ -- Function: void swap (mpq_class& OP1, mpq_class& OP2)
      These functions provide a C++ class interface to the corresponding
      GMP C routines.
 
@@ -5537,6 +5551,10 @@ used if this doesn't suit.
      If the string is not a valid float, an `std::invalid_argument'
      exception is thrown.  The same applies to `operator='.
 
+ -- Function: mpf_class operator"" _mpf (const char *STR)
+     With C++11 compilers, floats can be constructed with the syntax
+     `1.23e-1_mpf' which is equivalent to `mpf_class("1.23e-1")'.
+
  -- Function: mpf_class& mpf_class::operator= (type OP)
      Convert and store the given OP value to an `mpf_class' object.  The
      same types are accepted as for the constructors above.
@@ -5581,6 +5599,8 @@ used if this doesn't suit.
  -- Function: int mpf_class::set_str (const string& STR, int BASE)
  -- Function: int sgn (mpf_class OP)
  -- Function: mpf_class sqrt (mpf_class OP)
+ -- Function: void mpf_class::swap (mpf_class& OP)
+ -- Function: void swap (mpf_class& OP1, mpf_class& OP2)
  -- Function: mpf_class trunc (mpf_class OP)
      These functions provide a C++ class interface to the corresponding
      GMP C routines.
@@ -5638,7 +5658,7 @@ File: gmp.info,  Node: C++ Interface Random Numbers,  Next: C++ Interface Limita
      Seed a random number generator.  See *note Random Number
      Functions::, for how to choose a good seed.
 
- -- Function: mpz_class gmp_randclass::get_z_bits (unsigned long BITS)
+ -- Function: mpz_class gmp_randclass::get_z_bits (mp_bitcnt_t BITS)
  -- Function: mpz_class gmp_randclass::get_z_bits (mpz_class BITS)
      Generate a random integer with a specified number of bits.
 
@@ -5734,117 +5754,9 @@ Templated Expressions
           }
 
 
-File: gmp.info,  Node: BSD Compatible Functions,  Next: Custom Allocation,  Prev: C++ Class Interface,  Up: Top
+File: gmp.info,  Node: Custom Allocation,  Next: Language Bindings,  Prev: C++ Class Interface,  Up: Top
 
-13 Berkeley MP Compatible Functions
-***********************************
-
-These functions are intended to be fully compatible with the Berkeley MP
-library which is available on many BSD derived U*ix systems.  The
-`--enable-mpbsd' option must be used when building GNU MP to make these
-available (*note Installing GMP::).
-
-   The original Berkeley MP library has a usage restriction: you cannot
-use the same variable as both source and destination in a single
-function call.  The compatible functions in GNU MP do not share this
-restriction--inputs and outputs may overlap.
-
-   It is not recommended that new programs are written using these
-functions.  Apart from the incomplete set of functions, the interface
-for initializing `MINT' objects is more error prone, and the `pow'
-function collides with `pow' in `libm.a'.
-
-   Include the header `mp.h' to get the definition of the necessary
-types and functions.  If you are on a BSD derived system, make sure to
-include GNU `mp.h' if you are going to link the GNU `libmp.a' to your
-program.  This means that you probably need to give the `-I<dir>'
-option to the compiler, where `<dir>' is the directory where you have
-GNU `mp.h'.
-
- -- Function: MINT * itom (signed short int INITIAL_VALUE)
-     Allocate an integer consisting of a `MINT' object and dynamic limb
-     space.  Initialize the integer to INITIAL_VALUE.  Return a pointer
-     to the `MINT' object.
-
- -- Function: MINT * xtom (char *INITIAL_VALUE)
-     Allocate an integer consisting of a `MINT' object and dynamic limb
-     space.  Initialize the integer from INITIAL_VALUE, a hexadecimal,
-     null-terminated C string.  Return a pointer to the `MINT' object.
-
- -- Function: void move (MINT *SRC, MINT *DEST)
-     Set DEST to SRC by copying.  Both variables must be previously
-     initialized.
-
- -- Function: void madd (MINT *SRC_1, MINT *SRC_2, MINT *DESTINATION)
-     Add SRC_1 and SRC_2 and put the sum in DESTINATION.
-
- -- Function: void msub (MINT *SRC_1, MINT *SRC_2, MINT *DESTINATION)
-     Subtract SRC_2 from SRC_1 and put the difference in DESTINATION.
-
- -- Function: void mult (MINT *SRC_1, MINT *SRC_2, MINT *DESTINATION)
-     Multiply SRC_1 and SRC_2 and put the product in DESTINATION.
-
- -- Function: void mdiv (MINT *DIVIDEND, MINT *DIVISOR, MINT *QUOTIENT,
-          MINT *REMAINDER)
- -- Function: void sdiv (MINT *DIVIDEND, signed short int DIVISOR, MINT
-          *QUOTIENT, signed short int *REMAINDER)
-     Set QUOTIENT to DIVIDEND/DIVISOR, and REMAINDER to DIVIDEND mod
-     DIVISOR.  The quotient is rounded towards zero; the remainder has
-     the same sign as the dividend unless it is zero.
-
-     Some implementations of these functions work differently--or not
-     at all--for negative arguments.
-
- -- Function: void msqrt (MINT *OP, MINT *ROOT, MINT *REMAINDER)
-     Set ROOT to the truncated integer part of the square root of OP,
-     like `mpz_sqrt'.  Set REMAINDER to OP-ROOT*ROOT, i.e.  zero if OP
-     is a perfect square.
-
-     If ROOT and REMAINDER are the same variable, the results are
-     undefined.
-
- -- Function: void pow (MINT *BASE, MINT *EXP, MINT *MOD, MINT *DEST)
-     Set DEST to (BASE raised to EXP) modulo MOD.
-
-     Note that the name `pow' clashes with `pow' from the standard C
-     math library (*note Exponentiation and Logarithms: (libc)Exponents
-     and Logarithms.).  An application will only be able to use one or
-     the other.
-
- -- Function: void rpow (MINT *BASE, signed short int EXP, MINT *DEST)
-     Set DEST to BASE raised to EXP.
-
- -- Function: void gcd (MINT *OP1, MINT *OP2, MINT *RES)
-     Set RES to the greatest common divisor of OP1 and OP2.
-
- -- Function: int mcmp (MINT *OP1, MINT *OP2)
-     Compare OP1 and OP2.  Return a positive value if OP1 > OP2, zero
-     if OP1 = OP2, and a negative value if OP1 < OP2.
-
- -- Function: void min (MINT *DEST)
-     Input a decimal string from `stdin', and put the read integer in
-     DEST.  SPC and TAB are allowed in the number string, and are
-     ignored.
-
- -- Function: void mout (MINT *SRC)
-     Output SRC to `stdout', as a decimal string.  Also output a
-     newline.
-
- -- Function: char * mtox (MINT *OP)
-     Convert OP to a hexadecimal string, and return a pointer to the
-     string.  The returned string is allocated using the default memory
-     allocation function, `malloc' by default.  It will be
-     `strlen(str)+1' bytes, that being exactly enough for the string
-     and null-terminator.
-
- -- Function: void mfree (MINT *OP)
-     De-allocate, the space used by OP.  *This function should only be
-     passed a value returned by `itom' or `xtom'.*
-
-
-File: gmp.info,  Node: Custom Allocation,  Next: Language Bindings,  Prev: BSD Compatible Functions,  Up: Top
-
-14 Custom Allocation
+13 Custom Allocation
 ********************
 
 By default GMP uses `malloc', `realloc' and `free' for memory
@@ -5854,9 +5766,6 @@ output and terminates the program.
    Alternate functions can be specified, to allocate memory in a
 different way or to have a different error action on running out of
 memory.
-
-   This feature is available in the Berkeley compatibility library
-(*note BSD Compatible Functions::) as well as the main GMP library.
 
  -- Function: void mp_set_memory_functions (
           void *(*ALLOC_FUNC_PTR) (size_t),
@@ -5947,7 +5856,7 @@ this is a problem.
 
 File: gmp.info,  Node: Language Bindings,  Next: Algorithms,  Prev: Custom Allocation,  Up: Top
 
-15 Language Bindings
+14 Language Bindings
 ********************
 
 The following packages and projects offer access to GMP from languages
@@ -6090,7 +5999,7 @@ Other
 
 File: gmp.info,  Node: Algorithms,  Next: Internals,  Prev: Language Bindings,  Up: Top
 
-16 Algorithms
+15 Algorithms
 *************
 
 This chapter is an introduction to some of the algorithms used for
@@ -6115,7 +6024,7 @@ documented functions.
 
 File: gmp.info,  Node: Multiplication Algorithms,  Next: Division Algorithms,  Prev: Algorithms,  Up: Algorithms
 
-16.1 Multiplication
+15.1 Multiplication
 ===================
 
 NxN limb multiplications and squares are done using one of seven
@@ -6151,7 +6060,7 @@ Unbalanced Multiplication::).
 
 File: gmp.info,  Node: Basecase Multiplication,  Next: Karatsuba Multiplication,  Prev: Multiplication Algorithms,  Up: Multiplication Algorithms
 
-16.1.1 Basecase Multiplication
+15.1.1 Basecase Multiplication
 ------------------------------
 
 Basecase NxM multiplication is a straightforward rectangular set of
@@ -6196,7 +6105,7 @@ routine should be used always.
 
 File: gmp.info,  Node: Karatsuba Multiplication,  Next: Toom 3-Way Multiplication,  Prev: Basecase Multiplication,  Up: Multiplication Algorithms
 
-16.1.2 Karatsuba Multiplication
+15.1.2 Karatsuba Multiplication
 -------------------------------
 
 The Karatsuba multiplication algorithm is described in Knuth section
@@ -6281,7 +6190,7 @@ that sense the algorithm thresholds are merely of academic interest.
 
 File: gmp.info,  Node: Toom 3-Way Multiplication,  Next: Toom 4-Way Multiplication,  Prev: Karatsuba Multiplication,  Up: Multiplication Algorithms
 
-16.1.3 Toom 3-Way Multiplication
+15.1.3 Toom 3-Way Multiplication
 --------------------------------
 
 The Karatsuba formula is the simplest case of a general approach to
@@ -6424,7 +6333,7 @@ a bit of rearrangement just one division by 6 can be done.
 
 File: gmp.info,  Node: Toom 4-Way Multiplication,  Next: Higher degree Toom'n'half,  Prev: Toom 3-Way Multiplication,  Up: Multiplication Algorithms
 
-16.1.4 Toom 4-Way Multiplication
+15.1.4 Toom 4-Way Multiplication
 --------------------------------
 
 Karatsuba and Toom-3 split the operands into 2 and 3 coefficients,
@@ -6458,7 +6367,7 @@ size each.
 
 File: gmp.info,  Node: Higher degree Toom'n'half,  Next: FFT Multiplication,  Prev: Toom 4-Way Multiplication,  Up: Multiplication Algorithms
 
-16.1.5 Higher degree Toom'n'half
+15.1.5 Higher degree Toom'n'half
 --------------------------------
 
 The Toom algorithms described above (*note Toom 3-Way Multiplication::,
@@ -6485,7 +6394,7 @@ buffer equanl in size to the result of the product.
 
 File: gmp.info,  Node: FFT Multiplication,  Next: Other Multiplication,  Prev: Higher degree Toom'n'half,  Up: Multiplication Algorithms
 
-16.1.6 FFT Multiplication
+15.1.6 FFT Multiplication
 -------------------------
 
 At large to very large sizes a Fermat style FFT multiplication is used,
@@ -6589,7 +6498,7 @@ will be needed.
 
 File: gmp.info,  Node: Other Multiplication,  Next: Unbalanced Multiplication,  Prev: FFT Multiplication,  Up: Multiplication Algorithms
 
-16.1.7 Other Multiplication
+15.1.7 Other Multiplication
 ---------------------------
 
 The Toom algorithms described above (*note Toom 3-Way Multiplication::,
@@ -6634,7 +6543,7 @@ is of course of vital importance to GMP.
 
 File: gmp.info,  Node: Unbalanced Multiplication,  Prev: Other Multiplication,  Up: Multiplication Algorithms
 
-16.1.8 Unbalanced Multiplication
+15.1.8 Unbalanced Multiplication
 --------------------------------
 
 Multiplication of operands with different sizes, both below
@@ -6653,7 +6562,7 @@ coefficients, i.e., a polynomial of degree 1 to 3.
 
 File: gmp.info,  Node: Division Algorithms,  Next: Greatest Common Divisor Algorithms,  Prev: Multiplication Algorithms,  Up: Algorithms
 
-16.2 Division Algorithms
+15.2 Division Algorithms
 ========================
 
 * Menu:
@@ -6669,7 +6578,7 @@ File: gmp.info,  Node: Division Algorithms,  Next: Greatest Common Divisor Algor
 
 File: gmp.info,  Node: Single Limb Division,  Next: Basecase Division,  Prev: Division Algorithms,  Up: Division Algorithms
 
-16.2.1 Single Limb Division
+15.2.1 Single Limb Division
 ---------------------------
 
 Nx1 division is implemented using repeated 2x1 divisions from high to
@@ -6723,7 +6632,7 @@ pipelined.
 
 File: gmp.info,  Node: Basecase Division,  Next: Divide and Conquer Division,  Prev: Single Limb Division,  Up: Division Algorithms
 
-16.2.2 Basecase Division
+15.2.2 Basecase Division
 ------------------------
 
 Basecase NxM division is like long division done by hand, but in base
@@ -6748,7 +6657,7 @@ for each of the Q quotient limbs.
 
 File: gmp.info,  Node: Divide and Conquer Division,  Next: Block-Wise Barrett Division,  Prev: Basecase Division,  Up: Division Algorithms
 
-16.2.3 Divide and Conquer Division
+15.2.3 Divide and Conquer Division
 ----------------------------------
 
 For divisors larger than `DC_DIV_QR_THRESHOLD', division is done by
@@ -6788,7 +6697,7 @@ In practice, at moderate to large sizes, a 2NxN division is about 2 to
 
 File: gmp.info,  Node: Block-Wise Barrett Division,  Next: Exact Division,  Prev: Divide and Conquer Division,  Up: Division Algorithms
 
-16.2.4 Block-Wise Barrett Division
+15.2.4 Block-Wise Barrett Division
 ----------------------------------
 
 For the largest divisions, a block-wise Barrett division algorithm is
@@ -6804,7 +6713,7 @@ ceil(n/2) limbs.
 
 File: gmp.info,  Node: Exact Division,  Next: Exact Remainder,  Prev: Block-Wise Barrett Division,  Up: Division Algorithms
 
-16.2.5 Exact Division
+15.2.5 Exact Division
 ---------------------
 
 A so-called exact division is when the dividend is known to be an exact
@@ -6863,7 +6772,7 @@ pipelined multipliers.
 
 File: gmp.info,  Node: Exact Remainder,  Next: Small Quotient Division,  Prev: Exact Division,  Up: Division Algorithms
 
-16.2.6 Exact Remainder
+15.2.6 Exact Remainder
 ----------------------
 
 If the exact division algorithm is done with a full subtraction at each
@@ -6885,9 +6794,10 @@ some single limb divisions saved.  When d is a single limb some
 simplifications arise, providing good speedups on a number of
 processors.
 
-   `mpn_divexact_by3', `mpn_modexact_1_odd' and the `mpn_redc_X'
-functions differ subtly in how they return r, leading to some negations
-in the above formula, but all are essentially the same.
+   The functions `mpn_divexact_by3', `mpn_modexact_1_odd' and the
+internal `mpn_redc_X' functions differ subtly in how they return r,
+leading to some negations in the above formula, but all are essentially
+the same.
 
    Clearly r is zero when a is a multiple of d, and this leads to
 divisibility or congruence tests which are potentially more efficient
@@ -6913,7 +6823,7 @@ this.
 
 File: gmp.info,  Node: Small Quotient Division,  Prev: Exact Remainder,  Up: Division Algorithms
 
-16.2.7 Small Quotient Division
+15.2.7 Small Quotient Division
 ------------------------------
 
 An NxM division where the number of quotient limbs Q=N-M is small can
@@ -6945,7 +6855,7 @@ established by following the argument of Knuth section 4.3.1 exercise
 
 File: gmp.info,  Node: Greatest Common Divisor Algorithms,  Next: Powering Algorithms,  Prev: Division Algorithms,  Up: Algorithms
 
-16.3 Greatest Common Divisor
+15.3 Greatest Common Divisor
 ============================
 
 * Menu:
@@ -6959,7 +6869,7 @@ File: gmp.info,  Node: Greatest Common Divisor Algorithms,  Next: Powering Algor
 
 File: gmp.info,  Node: Binary GCD,  Next: Lehmer's Algorithm,  Prev: Greatest Common Divisor Algorithms,  Up: Greatest Common Divisor Algorithms
 
-16.3.1 Binary GCD
+15.3.1 Binary GCD
 -----------------
 
 At small sizes GMP uses an O(N^2) binary style GCD.  This is described
@@ -7021,7 +6931,7 @@ tests into a GCD.
 
 File: gmp.info,  Node: Lehmer's Algorithm,  Next: Subquadratic GCD,  Prev: Binary GCD,  Up: Greatest Common Divisor Algorithms
 
-16.3.2 Lehmer's algorithm
+15.3.2 Lehmer's algorithm
 -------------------------
 
 Lehmer's improvement of the Euclidean algorithms is based on the
@@ -7062,6 +6972,104 @@ optimizations:
      calculations half-way through, when the input numbers have been
      reduced in size from two limbs to one and a half.
 
+
+
+File: gmp.info,  Node: Subquadratic GCD,  Next: Extended GCD,  Prev: Lehmer's Algorithm,  Up: Greatest Common Divisor Algorithms
+
+15.3.3 Subquadratic GCD
+-----------------------
+
+For inputs larger than `GCD_DC_THRESHOLD', GCD is computed via the HGCD
+(Half GCD) function, as a generalization to Lehmer's algorithm.
+
+   Let the inputs a,b be of size N limbs each. Put S = floor(N/2) + 1.
+Then HGCD(a,b) returns a transformation matrix T with non-negative
+elements, and reduced numbers (c;d) = T^-1 (a;b). The reduced numbers
+c,d must be larger than S limbs, while their difference abs(c-d) must
+fit in S limbs. The matrix elements will also be of size roughly N/2.
+
+   The HGCD base case uses Lehmer's algorithm, but with the above stop
+condition that returns reduced numbers and the corresponding
+transformation matrix half-way through. For inputs larger than
+`HGCD_THRESHOLD', HGCD is computed recursively, using the divide and
+conquer algorithm in "On Schönhage's algorithm and subquadratic integer
+GCD computation" by Möller (*note References::). The recursive
+algorithm consists of these main steps.
+
+   * Call HGCD recursively, on the most significant N/2 limbs. Apply the
+     resulting matrix T_1 to the full numbers, reducing them to a size
+     just above 3N/2.
+
+   * Perform a small number of division or subtraction steps to reduce
+     the numbers to size below 3N/2. This is essential mainly for the
+     unlikely case of large quotients.
+
+   * Call HGCD recursively, on the most significant N/2 limbs of the
+     reduced numbers. Apply the resulting matrix T_2 to the full
+     numbers, reducing them to a size just above N/2.
+
+   * Compute T = T_1 T_2.
+
+   * Perform a small number of division and subtraction steps to
+     satisfy the requirements, and return.
+
+   GCD is then implemented as a loop around HGCD, similarly to Lehmer's
+algorithm. Where Lehmer repeatedly chops off the top two limbs, calls
+`mpn_hgcd2', and applies the resulting matrix to the full numbers, the
+subquadratic GCD chops off the most significant third of the limbs (the
+proportion is a tuning parameter, and 1/3 seems to be more efficient
+than, e.g, 1/2), calls `mpn_hgcd', and applies the resulting matrix.
+Once the input numbers are reduced to size below `GCD_DC_THRESHOLD',
+Lehmer's algorithm is used for the rest of the work.
+
+   The asymptotic running time of both HGCD and GCD is O(M(N)*log(N)),
+where M(N) is the time for multiplying two N-limb numbers.
+
+
+File: gmp.info,  Node: Extended GCD,  Next: Jacobi Symbol,  Prev: Subquadratic GCD,  Up: Greatest Common Divisor Algorithms
+
+15.3.4 Extended GCD
+-------------------
+
+The extended GCD function, or GCDEXT, calculates gcd(a,b) and also
+cofactors x and y satisfying a*x+b*y=gcd(a,b). All the algorithms used
+for plain GCD are extended to handle this case. The binary algorithm is
+used only for single-limb GCDEXT.  Lehmer's algorithm is used for sizes
+up to `GCDEXT_DC_THRESHOLD'. Above this threshold, GCDEXT is
+implemented as a loop around HGCD, but with more book-keeping to keep
+track of the cofactors. This gives the same asymptotic running time as
+for GCD and HGCD, O(M(N)*log(N))
+
+   One difference to plain GCD is that while the inputs a and b are
+reduced as the algorithm proceeds, the cofactors x and y grow in size.
+This makes the tuning of the chopping-point more difficult. The current
+code chops off the most significant half of the inputs for the call to
+HGCD in the first iteration, and the most significant two thirds for
+the remaining calls. This strategy could surely be improved. Also the
+stop condition for the loop, where Lehmer's algorithm is invoked once
+the inputs are reduced below `GCDEXT_DC_THRESHOLD', could maybe be
+improved by taking into account the current size of the cofactors.
+
+
+File: gmp.info,  Node: Jacobi Symbol,  Prev: Extended GCD,  Up: Greatest Common Divisor Algorithms
+
+15.3.5 Jacobi Symbol
+--------------------
+
+`mpz_jacobi' and `mpz_kronecker' are currently implemented with a
+simple binary algorithm similar to that described for the GCDs (*note
+Binary GCD::).  They're not very fast when both inputs are large.
+Lehmer's multi-step improvement or a binary based multi-step algorithm
+is likely to be better.
+
+   When one operand fits a single limb, and that includes
+`mpz_kronecker_ui' and friends, an initial reduction is done with
+either `mpn_mod_1' or `mpn_modexact_1_odd', followed by the binary
+algorithm on a single limb.  The binary algorithm is well suited to a
+single limb, and the whole calculation in this case is quite efficient.
+
+   In all the routines sign changes for the result are accumulated
+using some bit twiddling, avoiding table lookups or conditional jumps.
 
 
 
