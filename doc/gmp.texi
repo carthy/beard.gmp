@@ -15,7 +15,7 @@ This manual describes how to install and use the GNU multiple precision
 arithmetic library, version @value{VERSION}.
 
 Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Free Software
 Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document under
@@ -2187,7 +2187,7 @@ For GMP i.j.k, these numbers will be i, j, and k, respectively.
 @findex gmp_version
 The GMP version number, as a null-terminated string, in the form ``i.j.k''.
 This release is @nicode{"@value{VERSION}"}.  Note that the format ``i.j'' was
-used when k was zero was used before version 4.3.0.
+used, before version 4.3.0, when k was zero.
 @end deftypevr
 
 @defmac __GMP_CC
@@ -2203,7 +2203,7 @@ strings.
 @cindex Past GMP versions
 @cindex Upward compatibility
 
-This version of GMP is upwardly binary compatible with all 4.x and 3.x
+This version of GMP is upwardly binary compatible with all 5.x, 4.x, and 3.x
 versions, and upwardly compatible at the source level with all 2.x versions,
 with the following exceptions.
 
@@ -2215,10 +2215,13 @@ with other @code{mpn} functions.
 @item
 @code{mpf_get_prec} counted precision slightly differently in GMP 3.0 and
 3.0.1, but in 3.1 reverted to the 2.x style.
+
+@item
+@code{mpn_bdivmod}, documented as preliminary in GMP 4, has been removed.
 @end itemize
 
 There are a number of compatibility issues between GMP 1 and GMP 2 that of
-course also apply when porting applications from GMP 1 to GMP 4.  Please
+course also apply when porting applications from GMP 1 to GMP 5.  Please
 see the GMP 2 manual for details.
 
 @c @item Integer division functions round the result differently.  The obsolete
@@ -3647,7 +3650,7 @@ Set @var{rop} to the factorial of @var{n}: @code{mpz_fac_ui} computes the plain 
 @deftypefun void mpz_primorial_ui (mpz_t @var{rop}, unsigned long int @var{n})
 @cindex Primorial functions
 Set @var{rop} to the primorial of @var{n}, i.e. the product of all positive
-prime numbers smaller then or equal to @var{n}.
+prime numbers @math{@le{}@var{n}}.
 @end deftypefun
 
 @deftypefun void mpz_bin_ui (mpz_t @var{rop}, mpz_t @var{n}, unsigned long int @var{k})
@@ -5439,7 +5442,7 @@ case the return value is zero or non-zero according to whether the remainder
 would have been zero or non-zero.
 
 A return value of zero indicates a perfect square.  See also
-@code{mpz_perfect_square_p}.
+@code{mpn_perfect_square_p}.
 @end deftypefun
 
 @deftypefun mp_size_t mpn_get_str (unsigned char *@var{str}, int @var{base}, mp_limb_t *@var{s1p}, mp_size_t @var{s1n})
@@ -8614,6 +8617,9 @@ current size of the cofactors.
 @subsection Jacobi Symbol
 @cindex Jacobi symbol algorithm
 
+[This section is obsolete.  The current Jacobi code actually uses a very
+efficient algorithm.]
+
 @code{mpz_jacobi} and @code{mpz_kronecker} are currently implemented with a
 simple binary algorithm similar to that described for the GCDs (@pxref{Binary
 GCD}).  They're not very fast when both inputs are large.  Lehmer's multi-step
@@ -8660,7 +8666,7 @@ exponent.  Larger exponents use larger values of @math{k}, the choice being
 made to minimize the average number of multiplications that must supplement
 the squaring.
 
-The modular multiplies and squares use either a simple division or the REDC
+The modular multiplies and squarings use either a simple division or the REDC
 method by Montgomery (@pxref{References}).  REDC is a little faster,
 essentially saving N single limb divisions in a fashion similar to an exact
 remainder (@pxref{Exact Remainder}).
@@ -9263,7 +9269,7 @@ are also very good and this is the default algorithm used by GMP.
 @cindex Linear congruential algorithm
 Linear congruential generators are described in many text books, for instance
 Knuth volume 2 (@pxref{References}).  With a modulus @math{M} and parameters
-@math{A} and @math{C}, a integer state @math{S} is iterated by the formula
+@math{A} and @math{C}, an integer state @math{S} is iterated by the formula
 @math{S @leftarrow{} A@GMPmultiply{}S+C @bmod{} M}.  At each step the new
 state is a linear function of the previous, mod @math{M}, hence the name of
 the generator.

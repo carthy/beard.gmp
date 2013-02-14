@@ -44,7 +44,7 @@ mpz_remove (mpz_ptr dest, mpz_srcptr src, mpz_srcptr f)
       return 0;
     }
 
-  if ((fp0 & 1) == 1)
+  if ((fp0 & 1) != 0)
     { /* f is odd */
       mp_ptr dp;
       mp_size_t dn;
@@ -60,7 +60,7 @@ mpz_remove (mpz_ptr dest, mpz_srcptr src, mpz_srcptr f)
     { /* mpz_cmpabs_ui (f, 2) == 0 */
       pwr = mpz_scan1 (src, 0);
       mpz_div_2exp (dest, src, pwr);
-      if (pwr & (SIZ (f) < 0)) /*((pwr % 2 == 1) && (SIZ (f) < 0))*/
+      if (pwr & (fn < 0)) /*((pwr % 2 == 1) && (SIZ (f) < 0))*/
 	mpz_neg (dest, dest);
     }
   else
@@ -78,8 +78,7 @@ mpz_remove (mpz_ptr dest, mpz_srcptr src, mpz_srcptr f)
       mpz_init (x);
 
       pwr = 0;
-      mpz_init (fpow[0]);
-      mpz_set (fpow[0], f);
+      mpz_init_set (fpow[0], f);
       mpz_set (dest, src);
 
       /* Divide by f, f^2 ... f^(2^k) until we get a remainder for f^(2^k).  */
@@ -93,7 +92,7 @@ mpz_remove (mpz_ptr dest, mpz_srcptr src, mpz_srcptr f)
 	  mpz_set (dest, x);
 	}
 
-      pwr = (1L << p) - 1;
+      pwr = ((mp_bitcnt_t)1 << p) - 1;
 
       mpz_clear (fpow[p]);
 
@@ -104,7 +103,7 @@ mpz_remove (mpz_ptr dest, mpz_srcptr src, mpz_srcptr f)
 	  mpz_tdiv_qr (x, rem, dest, fpow[p]);
 	  if (SIZ (rem) == 0)
 	    {
-	      pwr += 1L << p;
+	      pwr += (mp_bitcnt_t)1 << p;
 	      mpz_set (dest, x);
 	    }
 	  mpz_clear (fpow[p]);

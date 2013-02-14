@@ -1,6 +1,6 @@
 /*
 
-Copyright 2012, Free Software Foundation, Inc.
+Copyright 2012, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -23,7 +23,7 @@ the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 #include <stdio.h>
 #include <string.h>
 
-#include "mini-random.h"
+#include "testutils.h"
 
 #define GMP_LIMB_BITS (sizeof(mp_limb_t) * CHAR_BIT)
 
@@ -55,20 +55,19 @@ static const struct
   { 0.0, NULL }
 };
 
-int
-main (int argc, char **argv)
+void
+testmain (int argc, char **argv)
 {
   unsigned i;
   mpz_t x;
 
-  hex_random_init ();
-
-  mpz_init (x);
+  void (*freefunc) (void *, size_t);
+  mp_get_memory_functions (NULL, NULL, &freefunc);
 
   for (i = 0; values[i].s; i++)
     {
       char *s;
-      mpz_set_d (x, values[i].d);
+      mpz_init_set_d (x, values[i].d);
       s = mpz_get_str (NULL, 16, x);
       if (strcmp (s, values[i].s) != 0)
 	{
@@ -79,8 +78,11 @@ main (int argc, char **argv)
 		   values[i].d, s, values[i].s);
 	  abort ();
 	}
-      free(s);
+      freefunc(s, 0);
+      mpz_clear (x);
     }
+
+  mpz_init (x);
 
   for (i = 0; i < COUNT; i++)
     {
@@ -99,13 +101,20 @@ main (int argc, char **argv)
       if (f != floor (d))
 	{
 	  fprintf (stderr, "mpz_set_d/mpz_get_d failed:\n");
-	  dump ("x", x);
-	  fprintf (stderr, "m = %lx, e = %i\n", m, e);
-	  fprintf (stderr, "d = %.15g\n", d);
-	  fprintf (stderr, "f = %.15g\n", f);
-	  fprintf (stderr, "d - f = %.5g\n", d - f);
-	  abort ();
+	  goto dumperror;
 	}
+      if ((f == d) ? (mpz_cmp_d (x, d) != 0) : (mpz_cmp_d (x, d) >= 0))
+	{
+	  fprintf (stderr, "mpz_cmp_d (x, d) failed:\n");
+	  goto dumperror;
+	}
+      f = d + 1.0;
+      if (f > d && ! (mpz_cmp_d (x, f) < 0))
+	{
+	  fprintf (stderr, "mpz_cmp_d (x, f) failed:\n");
+	  goto dumperror;
+	}
+
       d = - d;
 
       mpz_set_d (x, d);
@@ -113,15 +122,26 @@ main (int argc, char **argv)
       if (f != ceil (d))
 	{
 	  fprintf (stderr, "mpz_set_d/mpz_get_d failed:\n");
+	dumperror:
 	  dump ("x", x);
 	  fprintf (stderr, "m = %lx, e = %i\n", m, e);
 	  fprintf (stderr, "d = %.15g\n", d);
-	  fprintf (stderr, "c = %.15g\n", f);
-	  fprintf (stderr, "c - d = %.5g\n", f - d);
+	  fprintf (stderr, "f = %.15g\n", f);
+	  fprintf (stderr, "f - d = %.5g\n", f - d);
 	  abort ();
+	}
+      if ((f == d) ? (mpz_cmp_d (x, d) != 0) : (mpz_cmp_d (x, d) <= 0))
+	{
+	  fprintf (stderr, "mpz_cmp_d (x, d) failed:\n");
+	  goto dumperror;
+	}
+      f = d - 1.0;
+      if (f < d && ! (mpz_cmp_d (x, f) > 0))
+	{
+	  fprintf (stderr, "mpz_cmp_d (x, f) failed:\n");
+	  goto dumperror;
 	}
     }
 
   mpz_clear (x);
-  return EXIT_SUCCESS;
 }

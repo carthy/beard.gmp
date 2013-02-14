@@ -1,6 +1,6 @@
 /*
 
-Copyright 2012, Free Software Foundation, Inc.
+Copyright 2012, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -21,7 +21,7 @@ the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "mini-random.h"
+#include "testutils.h"
 
 #define MAXBITS 400
 #define COUNT 10000
@@ -40,13 +40,12 @@ typedef void div_func (mpz_t, const mpz_t, const mpz_t);
 typedef unsigned long div_x_ui_func (mpz_t, const mpz_t, unsigned long);
 typedef unsigned long div_ui_func (const mpz_t, unsigned long);
 
-int
-main (int argc, char **argv)
+void
+testmain (int argc, char **argv)
 {
   unsigned i;
   mpz_t a, b, q, r, rq, rr;
-
-  hex_random_init ();
+  int div_p;
 
   mpz_init (a);
   mpz_init (b);
@@ -126,6 +125,48 @@ main (int argc, char **argv)
 	      dump ("rref", rr);
 	      abort ();
 	    }
+
+	  if (j == 0)		/* do this once, not for all roundings */
+	    {
+	      div_p = mpz_divisible_p (a, b);
+	      if ((mpz_sgn (r) == 0) ^ (div_p != 0))
+		{
+		  fprintf (stderr, "mpz_divisible_p failed:\n");
+		  dump ("a", a);
+		  dump ("b", b);
+		  dump ("r   ", r);
+		  abort ();
+		}
+	    }
+
+	  if (j == 0 && mpz_sgn (b) < 0)  /* ceil, negative divisor */
+	    {
+	      mpz_mod (r, a, b);
+	      if (mpz_cmp (r, rr))
+		{
+		  fprintf (stderr, "mpz_mod failed:\n");
+		  dump ("a", a);
+		  dump ("b", b);
+		  dump ("r   ", r);
+		  dump ("rref", rr);
+		  abort ();
+		}
+	    }
+
+	  if (j == 1 && mpz_sgn (b) > 0) /* floor, positive divisor */
+	    {
+	      mpz_mod (r, a, b);
+	      if (mpz_cmp (r, rr))
+		{
+		  fprintf (stderr, "mpz_mod failed:\n");
+		  dump ("a", a);
+		  dump ("b", b);
+		  dump ("r   ", r);
+		  dump ("rref", rr);
+		  abort ();
+		}
+	    }
+
 	  if (mpz_fits_ulong_p (b))
 	    {
 	      mp_limb_t rl;
@@ -182,6 +223,33 @@ main (int argc, char **argv)
 		  dump ("rref", rr);
 		  abort ();
 		}
+
+	      if (j == 0)	/* do this once, not for all roundings */
+		{
+		  div_p = mpz_divisible_ui_p (a, mpz_get_ui (b));
+		  if ((mpz_sgn (r) == 0) ^ (div_p != 0))
+		    {
+		      fprintf (stderr, "mpz_divisible_ui_p failed:\n");
+		      dump ("a", a);
+		      dump ("b", b);
+		      dump ("r   ", r);
+		      abort ();
+		    }
+		}
+
+	      if (j == 1)	/* floor */
+		{
+		  mpz_mod_ui (r, a, mpz_get_ui (b));
+		  if (mpz_cmp (r, rr))
+		    {
+		      fprintf (stderr, "mpz_mod failed:\n");
+		      dump ("a", a);
+		      dump ("b", b);
+		      dump ("r   ", r);
+		      dump ("rref", rr);
+		      abort ();
+		    }
+		}
 	    }
 	}
     }
@@ -191,6 +259,4 @@ main (int argc, char **argv)
   mpz_clear (q);
   mpz_clear (rr);
   mpz_clear (rq);
-
-  return 0;
 }

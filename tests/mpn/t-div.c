@@ -1,4 +1,4 @@
-/* Copyright 2006, 2007, 2009, 2010 Free Software Foundation, Inc.
+/* Copyright 2006, 2007, 2009, 2010, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -54,7 +54,7 @@ dumpy (mp_srcptr p, mp_size_t n)
   puts ("");
 }
 
-static unsigned long test;
+static signed long test;
 
 static void
 check_one (mp_ptr qp, mp_srcptr rp,
@@ -84,7 +84,7 @@ check_one (mp_ptr qp, mp_srcptr rp,
       tvalue = "Q*D";
     error:
       printf ("\r*******************************************************************************\n");
-      printf ("%s failed test %lu: %s\n", fname, test, msg);
+      printf ("%s failed test %ld: %s\n", fname, test, msg);
       printf ("N=    "); dumpy (np, nn);
       printf ("D=    "); dumpy (dp, dn);
       printf ("Q=    "); dumpy (qp, qn);
@@ -142,12 +142,12 @@ main (int argc, char **argv)
 {
   gmp_randstate_ptr rands;
   unsigned long maxnbits, maxdbits, nbits, dbits;
-  mpz_t n, d, q, r, tz;
+  mpz_t n, d, q, r, tz, junk;
   mp_size_t maxnn, maxdn, nn, dn, clearn, i;
-  mp_ptr np, dp, qp, rp;
+  mp_ptr np, dup, dnp, qp, rp, junkp;
   mp_limb_t t;
   gmp_pi1_t dinv;
-  int count = COUNT;
+  long count = COUNT;
   mp_ptr scratch;
   mp_limb_t ran;
   mp_size_t alloc, itch;
@@ -165,7 +165,6 @@ main (int argc, char **argv)
 	}
     }
 
-
   maxdbits = MAX_DN;
   maxnbits = MAX_NN;
 
@@ -177,6 +176,7 @@ main (int argc, char **argv)
   mpz_init (q);
   mpz_init (r);
   mpz_init (tz);
+  mpz_init (junk);
 
   maxnn = maxnbits / GMP_NUMB_BITS + 1;
   maxdn = maxdbits / GMP_NUMB_BITS + 1;
@@ -185,21 +185,19 @@ main (int argc, char **argv)
 
   qp = TMP_ALLOC_LIMBS (maxnn + 2) + 1;
   rp = TMP_ALLOC_LIMBS (maxnn + 2) + 1;
+  dnp = TMP_ALLOC_LIMBS (maxdn);
 
   alloc = 1;
   scratch = __GMP_ALLOCATE_FUNC_LIMBS (alloc);
 
-  for (test = 0; test < count;)
+  for (test = -300; test < count; test++)
     {
-      do
-	{
-	  nbits = random_word (rands) % (maxnbits - GMP_NUMB_BITS) + 2 * GMP_NUMB_BITS;
-	  if (maxdbits > nbits)
-	    dbits = random_word (rands) % nbits + 1;
-	  else
-	    dbits = random_word (rands) % maxdbits + 1;
-	}
-      while (nbits < dbits);
+      nbits = random_word (rands) % (maxnbits - GMP_NUMB_BITS) + 2 * GMP_NUMB_BITS;
+
+      if (test < 0)
+	dbits = (test + 300) % (nbits - 1) + 1;
+      else
+	dbits = random_word (rands) % (nbits - 1) % maxdbits + 1;
 
 #if RAND_UNIFORM
 #define RANDFUNC mpz_urandomb
@@ -211,8 +209,9 @@ main (int argc, char **argv)
 	RANDFUNC (d, rands, dbits);
       while (mpz_sgn (d) == 0);
       dn = SIZ (d);
-      dp = PTR (d);
-      dp[dn - 1] |= GMP_NUMB_HIGHBIT;
+      dup = PTR (d);
+      MPN_COPY (dnp, dup, dn);
+      dnp[dn - 1] |= GMP_NUMB_HIGHBIT;
 
       if (test % 2 == 0)
 	{
@@ -236,13 +235,19 @@ main (int argc, char **argv)
       ASSERT_ALWAYS (nn <= maxnn);
       ASSERT_ALWAYS (dn <= maxdn);
 
+      mpz_urandomb (junk, rands, nbits);
+      junkp = PTR (junk);
+
       np = PTR (n);
 
       mpz_urandomb (tz, rands, 32);
       t = mpz_get_ui (tz);
 
       if (t % 17 == 0)
-	dp[dn - 1] = GMP_NUMB_MAX;
+	{
+	  dnp[dn - 1] = GMP_NUMB_MAX;
+	  dup[dn - 1] = GMP_NUMB_MAX;
+	}
 
       switch ((int) t % 16)
 	{
@@ -252,16 +257,15 @@ main (int argc, char **argv)
 	    np[i] = 0;
 	  break;
 	case 1:
-	  mpn_sub_1 (np + nn - dn, dp, dn, random_word (rands));
+	  mpn_sub_1 (np + nn - dn, dnp, dn, random_word (rands));
 	  break;
 	case 2:
-	  mpn_add_1 (np + nn - dn, dp, dn, random_word (rands));
+	  mpn_add_1 (np + nn - dn, dnp, dn, random_word (rands));
 	  break;
 	}
 
-      test++;
-
-      invert_pi1 (dinv, dp[dn - 1], dp[dn - 2]);
+      if (dn >= 2)
+	invert_pi1 (dinv, dnp[dn - 1], dnp[dn - 2]);
 
       rran0 = random_word (rands);
       rran1 = random_word (rands);
@@ -281,9 +285,9 @@ main (int argc, char **argv)
 	    {
 	      MPN_COPY (rp, np, nn);
 	      if (nn > dn)
-		MPN_ZERO (qp, nn - dn);
-	      qp[nn - dn] = mpn_sbpi1_div_qr (qp, rp, nn, dp, dn, dinv.inv32);
-	      check_one (qp, rp, np, nn, dp, dn, "mpn_sbpi1_div_qr", 0);
+		MPN_COPY (qp, junkp, nn - dn);
+	      qp[nn - dn] = mpn_sbpi1_div_qr (qp, rp, nn, dnp, dn, dinv.inv32);
+	      check_one (qp, rp, np, nn, dnp, dn, "mpn_sbpi1_div_qr", 0);
 	    }
 
 	  /* Test mpn_sbpi1_divappr_q */
@@ -291,9 +295,9 @@ main (int argc, char **argv)
 	    {
 	      MPN_COPY (rp, np, nn);
 	      if (nn > dn)
-		MPN_ZERO (qp, nn - dn);
-	      qp[nn - dn] = mpn_sbpi1_divappr_q (qp, rp, nn, dp, dn, dinv.inv32);
-	      check_one (qp, NULL, np, nn, dp, dn, "mpn_sbpi1_divappr_q", 1);
+		MPN_COPY (qp, junkp, nn - dn);
+	      qp[nn - dn] = mpn_sbpi1_divappr_q (qp, rp, nn, dnp, dn, dinv.inv32);
+	      check_one (qp, NULL, np, nn, dnp, dn, "mpn_sbpi1_divappr_q", 1);
 	    }
 
 	  /* Test mpn_sbpi1_div_q */
@@ -301,10 +305,40 @@ main (int argc, char **argv)
 	    {
 	      MPN_COPY (rp, np, nn);
 	      if (nn > dn)
-		MPN_ZERO (qp, nn - dn);
-	      qp[nn - dn] = mpn_sbpi1_div_q (qp, rp, nn, dp, dn, dinv.inv32);
-	      check_one (qp, NULL, np, nn, dp, dn, "mpn_sbpi1_div_q", 0);
+		MPN_COPY (qp, junkp, nn - dn);
+	      qp[nn - dn] = mpn_sbpi1_div_q (qp, rp, nn, dnp, dn, dinv.inv32);
+	      check_one (qp, NULL, np, nn, dnp, dn, "mpn_sbpi1_div_q", 0);
 	    }
+
+	  /* Test mpn_sb_div_qr_sec */
+	  itch = 3 * nn + 4;
+	  if (itch + 1 > alloc)
+	    {
+	      scratch = __GMP_REALLOCATE_FUNC_LIMBS (scratch, alloc, itch + 1);
+	      alloc = itch + 1;
+	    }
+	  scratch[itch] = ran;
+	  MPN_COPY (rp, np, nn);
+	  if (nn >= dn)
+	    MPN_COPY (qp, junkp, nn - dn + 1);
+	  mpn_sb_div_qr_sec (qp, rp, nn, dup, dn, scratch);
+	  ASSERT_ALWAYS (ran == scratch[itch]);
+	  check_one (qp, rp, np, nn, dup, dn, "mpn_sb_div_qr_sec", 0);
+
+	  /* Test mpn_sb_div_r_sec */
+	  itch = nn + 2 * dn + 2;
+	  if (itch + 1 > alloc)
+	    {
+	      scratch = __GMP_REALLOCATE_FUNC_LIMBS (scratch, alloc, itch + 1);
+	      alloc = itch + 1;
+	    }
+	  scratch[itch] = ran;
+	  MPN_COPY (rp, np, nn);
+	  mpn_sb_div_r_sec (rp, nn, dup, dn, scratch);
+	  ASSERT_ALWAYS (ran == scratch[itch]);
+	  /* Note: Since check_one cannot cope with random-only functions, we
+	     pass qp[] from the previous function, mpn_sb_div_qr_sec.  */
+	  check_one (qp, rp, np, nn, dup, dn, "mpn_sb_div_r_sec", 0);
 	}
 
       /* Test mpn_dcpi1_div_qr */
@@ -312,11 +346,11 @@ main (int argc, char **argv)
 	{
 	  MPN_COPY (rp, np, nn);
 	  if (nn > dn)
-	    MPN_ZERO (qp, nn - dn);
-	  qp[nn - dn] = mpn_dcpi1_div_qr (qp, rp, nn, dp, dn, &dinv);
+	    MPN_COPY (qp, junkp, nn - dn);
+	  qp[nn - dn] = mpn_dcpi1_div_qr (qp, rp, nn, dnp, dn, &dinv);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
 	  ASSERT_ALWAYS (rp[-1] == rran0);
-	  check_one (qp, rp, np, nn, dp, dn, "mpn_dcpi1_div_qr", 0);
+	  check_one (qp, rp, np, nn, dnp, dn, "mpn_dcpi1_div_qr", 0);
 	}
 
       /* Test mpn_dcpi1_divappr_q */
@@ -324,11 +358,11 @@ main (int argc, char **argv)
 	{
 	  MPN_COPY (rp, np, nn);
 	  if (nn > dn)
-	    MPN_ZERO (qp, nn - dn);
-	  qp[nn - dn] = mpn_dcpi1_divappr_q (qp, rp, nn, dp, dn, &dinv);
+	    MPN_COPY (qp, junkp, nn - dn);
+	  qp[nn - dn] = mpn_dcpi1_divappr_q (qp, rp, nn, dnp, dn, &dinv);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
 	  ASSERT_ALWAYS (rp[-1] == rran0);
-	  check_one (qp, NULL, np, nn, dp, dn, "mpn_dcpi1_divappr_q", 1);
+	  check_one (qp, NULL, np, nn, dnp, dn, "mpn_dcpi1_divappr_q", 1);
 	}
 
       /* Test mpn_dcpi1_div_q */
@@ -336,11 +370,11 @@ main (int argc, char **argv)
 	{
 	  MPN_COPY (rp, np, nn);
 	  if (nn > dn)
-	    MPN_ZERO (qp, nn - dn);
-	  qp[nn - dn] = mpn_dcpi1_div_q (qp, rp, nn, dp, dn, &dinv);
+	    MPN_COPY (qp, junkp, nn - dn);
+	  qp[nn - dn] = mpn_dcpi1_div_q (qp, rp, nn, dnp, dn, &dinv);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
 	  ASSERT_ALWAYS (rp[-1] == rran0);
-	  check_one (qp, NULL, np, nn, dp, dn, "mpn_dcpi1_div_q", 0);
+	  check_one (qp, NULL, np, nn, dnp, dn, "mpn_dcpi1_div_q", 0);
 	}
 
      /* Test mpn_mu_div_qr */
@@ -353,14 +387,14 @@ main (int argc, char **argv)
 	      alloc = itch + 1;
 	    }
 	  scratch[itch] = ran;
-	  MPN_ZERO (qp, nn - dn);
+	  MPN_COPY (qp, junkp, nn - dn);
 	  MPN_ZERO (rp, dn);
 	  rp[dn] = rran1;
-	  qp[nn - dn] = mpn_mu_div_qr (qp, rp, np, nn, dp, dn, scratch);
+	  qp[nn - dn] = mpn_mu_div_qr (qp, rp, np, nn, dnp, dn, scratch);
 	  ASSERT_ALWAYS (ran == scratch[itch]);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
 	  ASSERT_ALWAYS (rp[-1] == rran0);  ASSERT_ALWAYS (rp[dn] == rran1);
-	  check_one (qp, rp, np, nn, dp, dn, "mpn_mu_div_qr", 0);
+	  check_one (qp, rp, np, nn, dnp, dn, "mpn_mu_div_qr", 0);
 	}
 
       /* Test mpn_mu_divappr_q */
@@ -373,11 +407,11 @@ main (int argc, char **argv)
 	      alloc = itch + 1;
 	    }
 	  scratch[itch] = ran;
-	  MPN_ZERO (qp, nn - dn);
-	  qp[nn - dn] = mpn_mu_divappr_q (qp, np, nn, dp, dn, scratch);
+	  MPN_COPY (qp, junkp, nn - dn);
+	  qp[nn - dn] = mpn_mu_divappr_q (qp, np, nn, dnp, dn, scratch);
 	  ASSERT_ALWAYS (ran == scratch[itch]);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
-	  check_one (qp, NULL, np, nn, dp, dn, "mpn_mu_divappr_q", 4);
+	  check_one (qp, NULL, np, nn, dnp, dn, "mpn_mu_divappr_q", 4);
 	}
 
       /* Test mpn_mu_div_q */
@@ -390,13 +424,12 @@ main (int argc, char **argv)
 	      alloc = itch + 1;
 	    }
 	  scratch[itch] = ran;
-	  MPN_ZERO (qp, nn - dn);
-	  qp[nn - dn] = mpn_mu_div_q (qp, np, nn, dp, dn, scratch);
+	  MPN_COPY (qp, junkp, nn - dn);
+	  qp[nn - dn] = mpn_mu_div_q (qp, np, nn, dnp, dn, scratch);
 	  ASSERT_ALWAYS (ran == scratch[itch]);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
-	  check_one (qp, NULL, np, nn, dp, dn, "mpn_mu_div_q", 0);
+	  check_one (qp, NULL, np, nn, dnp, dn, "mpn_mu_div_q", 0);
 	}
-
 
       if (1)
 	{
@@ -407,10 +440,10 @@ main (int argc, char **argv)
 	      alloc = itch + 1;
 	    }
 	  scratch[itch] = ran;
-	  mpn_div_q (qp, np, nn, dp, dn, scratch);
+	  mpn_div_q (qp, np, nn, dup, dn, scratch);
 	  ASSERT_ALWAYS (ran == scratch[itch]);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
-	  check_one (qp, NULL, np, nn, dp, dn, "mpn_div_q", 0);
+	  check_one (qp, NULL, np, nn, dup, dn, "mpn_div_q", 0);
 	}
 
       if (dn >= 2 && nn >= 2)
@@ -421,58 +454,23 @@ main (int argc, char **argv)
 	  MPN_COPY (rp, np, nn);
 	  qp[nn - 2] = qp[nn-1] = qran1;
 
-	  qh = mpn_divrem_2 (qp, 0, rp, nn, dp + dn - 2);
+	  qh = mpn_divrem_2 (qp, 0, rp, nn, dnp + dn - 2);
 	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
 	  qp[nn - 2] = qh;
-
-	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_divrem_2", 0);
+	  check_one (qp, rp, np, nn, dnp + dn - 2, 2, "mpn_divrem_2", 0);
 
 	  /* Missing: divrem_2 with fraction limbs. */
 
-	  /* mpn_div_qr_2 (normalized) */
+	  /* mpn_div_qr_2 */
 	  qp[nn - 2] = qran1;
 
-	  qh = mpn_div_qr_2 (qp, rp, np, nn, dp + dn - 2);
+	  qh = mpn_div_qr_2 (qp, rp, np, nn, dup + dn - 2);
 	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
 	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
 	  qp[nn - 2] = qh;
-
-	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_div_qr_2 (normalized)", 0);
-
-	  /* mpn_div_qr_2 (unnormalized) */
-	  dp[dn - 1] &= ~GMP_NUMB_HIGHBIT;
-	  if (dp[dn - 1] == 0)
-	    continue;
-
-	  qp[nn - 2] = qran1;
-
-	  qh = mpn_div_qr_2 (qp, rp, np, nn, dp + dn - 2);
-	  ASSERT_ALWAYS (qp[nn - 2] == qran1);
-	  ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - 1] == qran1);
-	  qp[nn - 2] = qh;
-
-	  check_one (qp, rp, np, nn, dp + dn - 2, 2, "mpn_div_qr_2 (unnormalized)", 0);
-
-	  qp[nn - dn + 1] = qran1;
+	  check_one (qp, rp, np, nn, dup + dn - 2, 2, "mpn_div_qr_2", 0);
 	}
-
-      /* Finally, test mpn_div_q without msb set.  */
-      dp[dn - 1] &= ~GMP_NUMB_HIGHBIT;
-      if (dp[dn - 1] == 0)
-	continue;
-
-      itch = nn + 1;
-      if (itch + 1> alloc)
-	{
-	  scratch = __GMP_REALLOCATE_FUNC_LIMBS (scratch, alloc, itch + 1);
-	  alloc = itch + 1;
-	}
-      scratch[itch] = ran;
-      mpn_div_q (qp, np, nn, dp, dn, scratch);
-      ASSERT_ALWAYS (ran == scratch[itch]);
-      ASSERT_ALWAYS (qp[-1] == qran0);  ASSERT_ALWAYS (qp[nn - dn + 1] == qran1);
-      check_one (qp, NULL, np, nn, dp, dn, "mpn_div_q", 0);
     }
 
   __GMP_FREE_FUNC_LIMBS (scratch, alloc);
@@ -484,6 +482,7 @@ main (int argc, char **argv)
   mpz_clear (q);
   mpz_clear (r);
   mpz_clear (tz);
+  mpz_clear (junk);
 
   tests_end ();
   return 0;

@@ -7,7 +7,7 @@
    SAFE TO REACH IT THROUGH DOCUMENTED INTERFACES.  IN FACT, IT IS ALMOST
    GUARANTEED THAT IT WILL CHANGE OR DISAPPEAR IN A FUTURE GNU MP RELEASE.
 
-Copyright 2006, 2007, 2008 Free Software Foundation, Inc.
+Copyright 2006, 2007, 2008, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -55,7 +55,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #define MAYBE_mul_toom22						\
   (MUL_TOOM44_THRESHOLD < 4 * MUL_TOOM33_THRESHOLD)
 #define MAYBE_mul_toom44						\
-  (MUL_FFT_THRESHOLD >= 4 * MUL_TOOM44_THRESHOLD)
+  (MUL_TOOM6H_THRESHOLD >= 4 * MUL_TOOM44_THRESHOLD)
 #endif
 
 #define TOOM44_MUL_N_REC(p, a, b, n, ws)				\

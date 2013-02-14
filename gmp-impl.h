@@ -4,7 +4,7 @@
    BE SUBJECT TO INCOMPATIBLE CHANGES IN FUTURE GNU MP RELEASES.
 
 Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Free Software
 Foundation, Inc.
 
 This file is part of the GNU MP Library.
@@ -3722,6 +3722,21 @@ union ieee_double_extract
 };
 #endif
 
+#if HAVE_DOUBLE_VAX_D
+union double_extract
+{
+  struct
+    {
+      gmp_uint_least32_t man3:7;	/* highest 7 bits */
+      gmp_uint_least32_t exp:8;		/* excess-128 exponent */
+      gmp_uint_least32_t sig:1;
+      gmp_uint_least32_t man2:16;
+      gmp_uint_least32_t man1:16;
+      gmp_uint_least32_t man0:16;	/* lowest 16 bits */
+    } s;
+  double d;
+};
+#endif
 
 /* Use (4.0 * ...) instead of (2.0 * ...) to work around buggy compilers
    that don't convert ulong->double correctly (eg. SunOS 4 native cc).  */
@@ -4256,7 +4271,8 @@ __GMP_DECLSPEC extern mp_size_t __gmp_default_fp_limb_precision;
 #define DIGITS_IN_BASE_PER_LIMB(res, nlimbs, b)				\
   do {									\
     mp_limb_t _ph, _pl;							\
-    umul_ppmm (_ph, _pl, mp_bases[b].logb2, GMP_NUMB_BITS * (nlimbs));	\
+    umul_ppmm (_ph, _pl,						\
+	       mp_bases[b].logb2, GMP_NUMB_BITS * (mp_limb_t) (nlimbs));\
     res = _ph;								\
   } while (0)
 
@@ -4265,7 +4281,7 @@ __GMP_DECLSPEC extern mp_size_t __gmp_default_fp_limb_precision;
 #define LIMBS_PER_DIGIT_IN_BASE(res, ndigits, b)			\
   do {									\
     mp_limb_t _ph, _dummy;						\
-    umul_ppmm (_ph, _dummy, mp_bases[b].log2b, (ndigits));		\
+    umul_ppmm (_ph, _dummy, mp_bases[b].log2b, (mp_limb_t) (ndigits));	\
     res = 8 * _ph / GMP_NUMB_BITS + 2;					\
   } while (0)
 

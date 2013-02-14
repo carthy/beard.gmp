@@ -1,6 +1,6 @@
 /*
 
-Copyright 2011, Free Software Foundation, Inc.
+Copyright 2011, 2013, Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -51,14 +51,39 @@ mini_rrandomb (mpz_t r, unsigned long bits)
 }
 
 void
-mini_random_op (enum hex_random_op op, unsigned long maxbits,
-		mpz_t a, mpz_t b, mpz_t r)
+mini_rrandomb_export (mpz_t r, void *dst, size_t *countp,
+		      int order, size_t size, int endian, unsigned long bits)
+{
+  char *s;
+  s = hex_rrandomb_export (dst, countp, order, size, endian, bits);
+  set_str (r, s);
+  free (s);
+}
+
+void
+mini_random_op2 (enum hex_random_op op, unsigned long maxbits,
+		 mpz_t a, mpz_t r)
+{
+  char *ap;
+  char *rp;
+
+  hex_random_op2 (op, maxbits, &ap, &rp);
+  set_str (a, ap);
+  set_str (r, rp);
+
+  free (ap);
+  free (rp);
+}
+
+void
+mini_random_op3 (enum hex_random_op op, unsigned long maxbits,
+		 mpz_t a, mpz_t b, mpz_t r)
 {
   char *ap;
   char *bp;
   char *rp;
 
-  hex_random_op (op, maxbits, &ap, &bp, &rp);
+  hex_random_op3 (op, maxbits, &ap, &bp, &rp);
   set_str (a, ap);
   set_str (b, bp);
   set_str (r, rp);

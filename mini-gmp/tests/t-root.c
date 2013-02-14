@@ -1,6 +1,6 @@
 /*
 
-Copyright 2012, Free Software Foundation, Inc.
+Copyright 2012, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -21,7 +21,7 @@ the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "mini-random.h"
+#include "testutils.h"
 
 #define MAXBITS 400
 #define COUNT 10000
@@ -41,7 +41,10 @@ rootrem_valid_p (const mpz_t u, const mpz_t s, const mpz_t r, unsigned long z)
   mpz_t t;
 
   mpz_init (t);
-  mpz_pow_ui (t, s, z);
+  if (mpz_fits_ulong_p (s))
+    mpz_ui_pow_ui (t, mpz_get_ui (s), z);
+  else
+    mpz_pow_ui (t, s, z);
   mpz_sub (t, u, t);
   if (mpz_sgn (t) != mpz_sgn(u) || mpz_cmp (t, r) != 0)
     {
@@ -63,14 +66,12 @@ rootrem_valid_p (const mpz_t u, const mpz_t s, const mpz_t r, unsigned long z)
   return 1;
 }
 
-int
-main (int argc, char **argv)
+void
+testmain (int argc, char **argv)
 {
   unsigned i;
   unsigned long e;
   mpz_t u, s, r, bs;
-
-  hex_random_init ();
 
   mpz_init (u);
   mpz_init (s);
@@ -99,6 +100,4 @@ main (int argc, char **argv)
   mpz_clear (u);
   mpz_clear (s);
   mpz_clear (r);
-
-  return 0;
 }

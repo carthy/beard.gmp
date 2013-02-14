@@ -1,6 +1,6 @@
 /* Test mpz_com, mpz_and, mpz_ior, and mpz_xor.
 
-Copyright 1993, 1994, 1996, 1997, 2001 Free Software Foundation, Inc.
+Copyright 1993, 1994, 1996, 1997, 2001, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library test suite.
 
@@ -54,6 +54,45 @@ main (int argc, char **argv)
   mpz_init (t1);
   mpz_init (t2);
   mpz_init (t3);
+
+  mpz_set_si (x, -1);
+  mpz_set_ui (y, 0);
+  for (i = 0; i < 300; i++)
+    {
+      mpz_mul_2exp (x, x, 1);
+
+      mpz_and (r1, x, x);
+      MPZ_CHECK_FORMAT (r1);
+      if (mpz_cmp (r1, x) != 0)
+	dump_abort ();
+
+      mpz_ior (r2, x, x);
+      MPZ_CHECK_FORMAT (r2);
+      if (mpz_cmp (r2, x) != 0)
+	dump_abort ();
+
+      mpz_xor (t1, x, x);
+      MPZ_CHECK_FORMAT (t1);
+      if (mpz_cmp_si (t1, 0) != 0)
+	dump_abort ();
+
+      mpz_ior (t1, x, y);
+      MPZ_CHECK_FORMAT (t1);
+      if (mpz_cmp (t1, x) != 0)
+	dump_abort ();
+
+      mpz_xor (t2, x, y);
+      MPZ_CHECK_FORMAT (t2);
+      if (mpz_cmp (t2, x) != 0)
+	dump_abort ();
+
+      mpz_com (t2, x);
+      MPZ_CHECK_FORMAT (t2);
+      mpz_xor (t3, t2, x);
+      MPZ_CHECK_FORMAT (t3);
+      if (mpz_cmp_si (t3, -1) != 0)
+	dump_abort ();
+    }
 
   for (i = 0; i < reps; i++)
     {

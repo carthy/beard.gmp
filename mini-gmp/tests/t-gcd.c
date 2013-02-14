@@ -21,7 +21,7 @@ the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "mini-random.h"
+#include "testutils.h"
 
 #define MAXBITS 400
 #define COUNT 10000
@@ -100,16 +100,19 @@ gcdext_valid_p (const mpz_t a, const mpz_t b,
       if (mpz_cmpabs (r, ta) > 0)
 	return 0;
     }
+
+  mpz_clear (ta);
+  mpz_clear (tb);
+  mpz_clear (r);
+
   return 1;
 }
 
-int
-main (int argc, char **argv)
+void
+testmain (int argc, char **argv)
 {
   unsigned i;
   mpz_t a, b, g, s, t;
-
-  hex_random_init ();
 
   mpz_init (a);
   mpz_init (b);
@@ -119,7 +122,7 @@ main (int argc, char **argv)
 
   for (i = 0; i < COUNT; i++)
     {
-      mini_random_op (OP_GCD, MAXBITS, a, b, s);
+      mini_random_op3 (OP_GCD, MAXBITS, a, b, s);
       mpz_gcd (g, a, b);
       if (mpz_cmp (g, s))
 	{
@@ -178,6 +181,4 @@ main (int argc, char **argv)
   mpz_clear (g);
   mpz_clear (s);
   mpz_clear (t);
-
-  return 0;
 }

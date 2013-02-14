@@ -1,6 +1,6 @@
 /* mini-gmp, a minimalistic implementation of a GNU GMP subset.
 
-Copyright 2011, 2012 Free Software Foundation, Inc.
+Copyright 2011, 2012, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -108,6 +108,7 @@ int mpz_cmp (const mpz_t, const mpz_t);
 int mpz_cmpabs_ui (const mpz_t, unsigned long);
 int mpz_cmpabs (const mpz_t, const mpz_t);
 int mpz_cmp_d (const mpz_t, double);
+int mpz_cmpabs_d (const mpz_t, double);
 
 void mpz_abs (mpz_t, const mpz_t);
 void mpz_neg (mpz_t, const mpz_t);
@@ -223,6 +224,7 @@ void mpz_init_set_d (mpz_t, double);
 size_t mpz_sizeinbase (const mpz_t, int);
 char *mpz_get_str (char *, int, const mpz_t);
 int mpz_set_str (mpz_t, const char *, int);
+int mpz_init_set_str (mpz_t, const char *, int);
 
 /* This long list taken from gmp.h. */
 /* For reference, "defined(EOF)" cannot be used here.  In g++ 2.95.4,

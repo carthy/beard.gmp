@@ -1,8 +1,40 @@
 Copyright 1996, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+2009, 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
 
 Verbatim copying and distribution of this entire article is permitted in any
 medium, provided this notice is preserved.
+
+
+Changes between GMP version 5.1.0 and 5.1.1
+
+  BUGS FIXED
+  * On Windows 64-bit, an error causing link errors about
+    __gmp_binvert_limb_table has been fixed.
+
+  * Aarch64 alias ARM64 support now works.
+
+  * A possible buffer overrun in mpz_ior has been fixed.
+
+  * A rare sign flip in mpz_remove has been fixed.
+
+  * A bug causing problems with mpf numbers with absolute value >= 2^31 has
+    been fixed.
+
+  * Several bugs in mini-gmp have been fixed.
+
+  * A bug caused by automake, related to the 'distcheck' target, has been fixed
+    by upgrading the automake used for GMP release engineering.
+
+  SPEEDUPS
+  * None.
+
+  FEATURES
+  * Preliminary support for the x32 ABI under x86-64.
+
+  MISC
+  * The mini-gmp testsuite now tests the entire set of functions.
+
+  * Various improvements of the GMP testsuite.
 
 
 Changes between GMP version 5.0.* and 5.1.0
@@ -22,11 +54,11 @@ Changes between GMP version 5.0.* and 5.1.0
     speedups for small and large operands.
 
   * New subquadratic algorithm for the Kronecker/Jacobi/Legendre symbol.
-  
+
   * Major speedup for ARM, in particular ARM Cortex-A9 and A15, thanks to broad
     assembly support.
 
-  * Significant speedup or POWER6 and POWER7 thanks to improved assembly.
+  * Significant speedup for POWER6 and POWER7 thanks to improved assembly.
 
   * The performance under M$ Windows' 64-bit ABI has been greatly improved
     thanks to complete assembly support.
@@ -46,7 +78,7 @@ Changes between GMP version 5.0.* and 5.1.0
 
   MISC
   * Inclusion of assembly code is now controlled by the configure options
-    --enable-assembly and --disable-assembly.  The "none" CPU targets is gone.
+    --enable-assembly and --disable-assembly.  The "none" CPU target is gone.
 
   * In C++, the conversions mpq_class->mpz_class, mpf_class->mpz_class and
     mpf_class->mpq_class are now explicit.

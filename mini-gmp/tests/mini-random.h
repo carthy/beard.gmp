@@ -22,7 +22,12 @@ the GNU MP Library test suite.  If not, see http://www.gnu.org/licenses/.  */
 
 void mini_urandomb (mpz_t, unsigned long);
 void mini_rrandomb (mpz_t, unsigned long);
-void mini_random_op (enum hex_random_op,  unsigned long, mpz_t, mpz_t, mpz_t);
+void mini_rrandomb_export (mpz_t r, void *dst, size_t *countp,
+			   int order, size_t size, int endian,
+			   unsigned long bits);
+
+void mini_random_op2 (enum hex_random_op,  unsigned long, mpz_t, mpz_t);
+void mini_random_op3 (enum hex_random_op,  unsigned long, mpz_t, mpz_t, mpz_t);
 void mini_random_op4 (enum hex_random_op, unsigned long, mpz_t, mpz_t, mpz_t, mpz_t);
 void mini_random_scan_op (enum hex_random_op, unsigned long, mpz_t, mp_bitcnt_t *, mp_bitcnt_t *);
 void mini_random_bit_op (enum hex_random_op, unsigned long, mpz_t, mp_bitcnt_t *, mpz_t);

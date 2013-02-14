@@ -6,7 +6,7 @@
    SAFE TO REACH IT THROUGH DOCUMENTED INTERFACES.  IN FACT, IT IS ALMOST
    GUARANTEED THAT IT WILL CHANGE OR DISAPPEAR IN A FUTURE GNU MP RELEASE.
 
-Copyright 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+Copyright 2006, 2007, 2008, 2009, 2010, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -52,7 +52,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #define MAYBE_sqr_toom2							\
   (SQR_TOOM4_THRESHOLD < 4 * SQR_TOOM3_THRESHOLD)
 #define MAYBE_sqr_toom4							\
-  (SQR_FFT_THRESHOLD >= 4 * SQR_TOOM4_THRESHOLD)
+  (SQR_TOOM6_THRESHOLD >= 4 * SQR_TOOM4_THRESHOLD)
 #endif
 
 #define TOOM4_SQR_REC(p, a, n, ws)					\

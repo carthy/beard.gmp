@@ -2,7 +2,7 @@
 
 
 # Copyright 1991, 1993, 1994, 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-# 2006, 2007, 2008, 2009, 2011, 2012 Free Software Foundation, Inc.
+# 2006, 2007, 2008, 2009, 2011, 2012, 2013 Free Software Foundation, Inc.
 #
 # This file is part of the GNU MP Library.
 #
@@ -72,6 +72,7 @@
 #        5.0.4   10:4:0    6:4:2   4:24:1
 #        5.0.5   10:5:0    6:5:2   4:25:1
 #        5.1.0   11:0:1    7:0:3     -
+#        5.1.1   11:1:1    7:1:3     -
 #
 # Starting at 3:0:0 is a slight abuse of the versioning system, but it
 # ensures we're past soname libgmp.so.2, which was used on Debian GNU/Linux
@@ -85,11 +86,11 @@
 # libgmpxx.so.3.0.4) incrementing, to make it clear which GMP it's from.
 
 LIBGMP_LT_CURRENT    = 11
-LIBGMP_LT_REVISION   = 0
+LIBGMP_LT_REVISION   = 1
 LIBGMP_LT_AGE        = 1
 
 LIBGMPXX_LT_CURRENT  = 7
-LIBGMPXX_LT_REVISION = 0
+LIBGMPXX_LT_REVISION = 1
 LIBGMPXX_LT_AGE      = 3
 
 
@@ -406,7 +407,9 @@ check-mini-gmp:
 	abs_srcdir="`cd $(srcdir) && pwd`" ; \
 	$(MKDIR_P) mini-gmp/tests \
 	&& cd mini-gmp/tests \
-	&& $(MAKE) -f "$$abs_srcdir/mini-gmp/tests/Makefile" \
+	&& LD_LIBRARY_PATH="../../.libs:$$LD_LIBRARY_PATH" \
+	   DYLD_LIBRARY_PATH="../../.libs:$$DYLD_LIBRARY_PATH" \
+	   $(MAKE) -f "$$abs_srcdir/mini-gmp/tests/Makefile" \
 		VPATH="$$abs_srcdir/mini-gmp/tests" \
 		srcdir="$$abs_srcdir/mini-gmp/tests" \
 		MINI_GMP_DIR="$$abs_srcdir/mini-gmp" \
